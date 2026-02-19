@@ -10,11 +10,12 @@ import (
 )
 
 type ViewportTile struct {
-	Name    string
-	Box     LabeledBox
-	Content viewport.Model
-	Size    tl.Size
-	Parent  tl.Tile
+	Name      string
+	Box       LabeledBox
+	Content   viewport.Model
+	Size      tl.Size
+	Parent    tl.Tile
+	BoxBorder bool
 }
 
 func (vt *ViewportTile) GetName() string {
@@ -42,19 +43,35 @@ func (vt *ViewportTile) SetParent(parent tl.Tile) {
 }
 
 func (vt *ViewportTile) Update(tea.Msg) (tea.Model, tea.Cmd) {
-	vt.Content.Width = vt.Size.Width - tl.BOX_PAD
-	vt.Content.Height = vt.Size.Height - tl.BOX_PAD
+	newWidth := vt.Size.Width
+	newHeight := vt.Size.Height
+	if vt.BoxBorder {
+		newWidth -= BOX_PAD
+		newHeight -= BOX_PAD
+	}
+	vt.Content.Width = newWidth
+	vt.Content.Height = newHeight
+	borderDescription := "I don't have a box border."
+	if vt.BoxBorder {
+		borderDescription = "I have a box border."
+	}
+	sizeDescription := fmt.Sprintf("Currently my dimensions are: width=%d height=%d weight=%.2f.", vt.Size.Width, vt.Size.Height, vt.Size.Weight)
+	text := fmt.Sprintf("I am viewport tile %s. My parent is %s. %s %s", vt.Name, vt.Parent.GetName(), borderDescription, sizeDescription)
+	text = lipgloss.NewStyle().Width(newWidth).Render(text)
+	vt.Content.SetContent(text)
 	return vt, nil
 }
 
 func (vt *ViewportTile) View() string {
-	vt.Box = NewLabeledBox()
-	vt.Box.BoxStyle = vt.Box.BoxStyle.
-		BorderForeground(lipgloss.Color("62")).
-		Padding(0, 0, 0, 0).
-		Width(vt.Size.Width - tl.BOX_PAD).
-		Height(vt.Size.Height - tl.BOX_PAD)
-	s := fmt.Sprintf("%s (w:%d h:%d)", vt.Name, vt.Size.Width, vt.Size.Height)
-	return vt.Box.Render(s, vt.Content.View(), vt.Size.Width-tl.BOX_PAD)
+	if vt.BoxBorder {
+		vt.Box = NewLabeledBox()
+		vt.Box.BoxStyle = vt.Box.BoxStyle.
+			BorderForeground(lipgloss.Color("62")).
+			Padding(0, 0, 0, 0).
+			Width(vt.Size.Width - BOX_PAD).
+			Height(vt.Size.Height - BOX_PAD)
+		return vt.Box.Render(vt.Name, vt.Content.View(), vt.Size.Width-BOX_PAD)
+	}
+	return vt.Content.View()
 
 }

@@ -9,45 +9,45 @@ import (
 	tl "github.com/mko88/bubbletea-tilelayout"
 )
 
-func NewViewportTile(weight float64, name string) ViewportTile {
+func NewViewportTile(weight float64, name string, boxBorder bool) ViewportTile {
 	vp := viewport.New(10, 10)
-	vp.SetContent(fmt.Sprintf("%v\n------\nviewport content", name))
 	return ViewportTile{
-		Name:    name,
-		Content: vp,
-		Size:    tl.Size{Weight: weight},
+		Name:      name,
+		Content:   vp,
+		Size:      tl.Size{Weight: weight},
+		BoxBorder: boxBorder,
 	}
 }
 
 func initialModel() *tl.TileLayout {
 	layout := tl.TileLayout{
-		Name:      "root",
+		Name:      "Root",
 		Direction: tl.Horizontal,
 		Root:      true,
 	}
 
-	box1 := NewViewportTile(0.20, "box1")
-	box2 := NewViewportTile(0.40, "box2")
+	box1 := NewViewportTile(0.20, "Box1", true)
+	box2 := NewViewportTile(0.40, "Box2", true)
 	layout.Add(&box1)
 	layout.Add(&box2)
 
 	sub1 := tl.TileLayout{
-		Name:       "sub-1",
-		Direction:  tl.Vertical,
-		LayoutSize: tl.Size{Weight: 0.60},
+		Name:      "Sub-1",
+		Direction: tl.Vertical,
+		Size:      tl.Size{Weight: 0.60},
 	}
-	box3 := NewViewportTile(0.20, "box3")
-	box4 := NewViewportTile(0.30, "box4")
+	box3 := NewViewportTile(0.20, "Box3", true)
+	box4 := NewViewportTile(0.30, "Box4", false)
 	sub1.Add(&box3)
 	sub1.Add(&box4)
 
 	subsub1 := tl.TileLayout{
-		Name:       "subsub-1",
-		Direction:  tl.Horizontal,
-		LayoutSize: tl.Size{Weight: 0.5},
+		Name:      "SubSub-1",
+		Direction: tl.Horizontal,
+		Size:      tl.Size{Weight: 0.5},
 	}
-	box5 := NewViewportTile(0.40, "box5")
-	box6 := NewViewportTile(0.60, "box6")
+	box5 := NewViewportTile(0.40, "Box5", false)
+	box6 := NewViewportTile(0.60, "Box6", true)
 	subsub1.Add(&box5)
 	subsub1.Add(&box6)
 	sub1.Add(&subsub1)

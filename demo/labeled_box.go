@@ -6,6 +6,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+const (
+	BOX_PAD = 2
+)
+
 type LabeledBox struct {
 	BoxStyle   lipgloss.Style
 	LabelStyle lipgloss.Style

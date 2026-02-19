@@ -35,13 +35,9 @@ const (
 	Vertical
 )
 
-const (
-	BOX_PAD = 2
-)
-
 type TileLayout struct {
 	Name        string
-	LayoutSize  Size
+	Size        Size
 	Tiles       []Tile
 	Proportions []float64
 	Direction   Direction
@@ -54,11 +50,11 @@ func (tl *TileLayout) GetName() string {
 }
 
 func (tl *TileLayout) GetSize() Size {
-	return tl.LayoutSize
+	return tl.Size
 }
 
 func (tl *TileLayout) SetSize(size Size) {
-	tl.LayoutSize = size
+	tl.Size = size
 }
 
 func (tl *TileLayout) GetParent() Tile {
@@ -88,9 +84,9 @@ func (tl *TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		if tl.isRoot() {
-			tl.LayoutSize.Width = msg.Width
-			tl.LayoutSize.Height = msg.Height
-			tl.LayoutSize.Weight = 1
+			tl.Size.Width = msg.Width
+			tl.Size.Height = msg.Height
+			tl.Size.Weight = 1
 		}
 		tl.layout()
 	}
@@ -137,23 +133,23 @@ func (tl *TileLayout) layout() {
 		}
 		weight := tile.GetSize().Weight
 		if tl.Direction == Horizontal {
-			totalHeight = tl.LayoutSize.Height
-			tileWidth := int(float64(tl.LayoutSize.Width) * weight)
+			totalHeight = tl.Size.Height
+			tileWidth := int(float64(tl.Size.Width) * weight)
 			totalWidth += tileWidth
 			if tileWidth > 0 {
-				tile.SetSize(Size{Width: tileWidth, Height: tl.LayoutSize.Height, Weight: weight})
+				tile.SetSize(Size{Width: tileWidth, Height: tl.Size.Height, Weight: weight})
 			}
 		} else {
-			totalWidth = tl.LayoutSize.Width
-			tileHeight := int(float64(tl.LayoutSize.Height) * weight)
+			totalWidth = tl.Size.Width
+			tileHeight := int(float64(tl.Size.Height) * weight)
 			totalHeight += tileHeight
 			if tileHeight > 0 {
-				tile.SetSize(Size{Width: tl.LayoutSize.Width, Height: tileHeight, Weight: weight})
+				tile.SetSize(Size{Width: tl.Size.Width, Height: tileHeight, Weight: weight})
 			}
 		}
 	}
-	leftoverHeight := tl.LayoutSize.Height - totalHeight
-	leftoverWidth := tl.LayoutSize.Width - totalWidth
+	leftoverHeight := tl.Size.Height - totalHeight
+	leftoverWidth := tl.Size.Width - totalWidth
 	lastTile := tl.Tiles[len(tl.Tiles)-1]
 	lastTileSize := lastTile.GetSize()
 	if leftoverHeight != 0 {
