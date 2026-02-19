@@ -55,7 +55,7 @@ func (vt *ViewportTile) Update(tea.Msg) (tea.Model, tea.Cmd) {
 	if vt.BoxBorder {
 		borderDescription = "I have a box border."
 	}
-	sizeDescription := fmt.Sprintf("Currently my dimensions are: width=%d height=%d weight=%.2f.", vt.Size.Width, vt.Size.Height, vt.Size.Weight)
+	sizeDescription := fmt.Sprintf("Currently my dimensions are: %s.", printSize(vt.Size))
 	text := fmt.Sprintf("I am viewport tile %s. My parent is %s. %s %s", vt.Name, vt.Parent.GetName(), borderDescription, sizeDescription)
 	text = lipgloss.NewStyle().Width(newWidth).Render(text)
 	vt.Content.SetContent(text)
@@ -73,5 +73,9 @@ func (vt *ViewportTile) View() string {
 		return vt.Box.Render(vt.Name, vt.Content.View(), vt.Size.Width-BOX_PAD)
 	}
 	return vt.Content.View()
+}
 
+func printSize(s tl.Size) string {
+	return fmt.Sprintf("actual[w:%d,h:%d,W:%.2f] min[w:%d,h:%d] max[w:%d,h:%d] fixed[w:%d,h:%d]",
+		s.Width, s.Height, s.Weight, s.MinWidth, s.MinHeight, s.MaxWidth, s.MaxHeight, s.FixedWidth, s.FixedHeight)
 }

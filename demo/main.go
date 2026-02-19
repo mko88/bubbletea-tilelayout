@@ -47,7 +47,7 @@ func initialModel() *tl.TileLayout {
 		Size:      tl.Size{Weight: 0.5},
 	}
 	box5 := NewViewportTile(tl.Size{Weight: 0.40, MaxHeight: 8}, "Box5", true)
-	box6 := NewViewportTile(tl.Size{Weight: 0.60, MaxWidth: 14, MaxHeight: 14}, "Box6", true)
+	box6 := NewViewportTile(tl.Size{Weight: 0.60, MaxWidth: 40, MaxHeight: 14}, "Box6", true)
 	subsub1.Add(&box5)
 	subsub1.Add(&box6)
 	sub1.Add(&subsub1)

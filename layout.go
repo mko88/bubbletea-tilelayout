@@ -181,20 +181,6 @@ func (tl *TileLayout) layout() {
 			}
 		}
 	}
-	leftoverHeight := tl.Size.Height - totalHeight
-	leftoverWidth := tl.Size.Width - totalWidth
-	// lastTile := tl.Tiles[len(tl.Tiles)-1]
-	// lastTileSize := lastTile.GetSize()
-	if leftoverHeight != 0 {
-		// lastTileSize.Height += leftoverHeight
-		// lastTileSize.Height = decideHeight(lastTileSize, tl)
-		// lastTile.SetSize(lastTileSize)
-	}
-	if leftoverWidth != 0 {
-		// lastTileSize.Width += leftoverWidth
-		// lastTileSize.Width = decideWidth(lastTileSize, tl)
-		// lastTile.SetSize(lastTileSize)
-	}
 }
 
 func decideWidth(s Size, layout *TileLayout) int {
