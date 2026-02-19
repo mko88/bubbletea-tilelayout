@@ -6,16 +6,32 @@ import (
 )
 
 type Size struct {
-	Width  int
-	Height int
-	Weight float64
+	Width       int
+	Height      int
+	Weight      float64
+	MinWidth    int
+	MinHeight   int
+	MaxWidth    int
+	MaxHeight   int
+	FixedWidth  int
+	FixedHeight int
 }
 
 func NewSize() Size {
+	return Size{}
+}
+
+func (s *Size) Copy() Size {
 	return Size{
-		Width:  0,
-		Height: 0,
-		Weight: 0.0,
+		Width:       s.Width,
+		Height:      s.Height,
+		Weight:      s.Weight,
+		MinWidth:    s.MinWidth,
+		MinHeight:   s.MaxHeight,
+		MaxWidth:    s.MaxWidth,
+		MaxHeight:   s.MaxHeight,
+		FixedWidth:  s.FixedWidth,
+		FixedHeight: s.FixedHeight,
 	}
 }
 
@@ -131,31 +147,123 @@ func (tl *TileLayout) layout() {
 		if tile == nil {
 			continue
 		}
-		weight := tile.GetSize().Weight
-		if tl.Direction == Horizontal {
+		newSize := tile.GetSize()
+		switch tl.Direction {
+		case Horizontal:
+			// for horizontal, the total height is always concidered to be the layout height
 			totalHeight = tl.Size.Height
-			tileWidth := int(float64(tl.Size.Width) * weight)
+			// decide the actual height in case of min/max/fixed
+			tileHeight := decideHeight(newSize, tl)
+			// in case the calculated width is more than the left available
+			tileWidth := min(decideWidth(newSize, tl), tl.Size.Width-totalWidth)
+			// append to total
 			totalWidth += tileWidth
 			if tileWidth > 0 {
-				tile.SetSize(Size{Width: tileWidth, Height: tl.Size.Height, Weight: weight})
+				// set new size to tile
+				newSize.Width = tileWidth
+				newSize.Height = tileHeight
+				tile.SetSize(newSize)
 			}
-		} else {
+		case Vertical:
+			// for vertical, the total width is always concidered to be the layout width
 			totalWidth = tl.Size.Width
-			tileHeight := int(float64(tl.Size.Height) * weight)
+			// in case the calculated height is more than the left available
+			tileHeight := min(decideHeight(newSize, tl), tl.Size.Height-totalHeight)
+			// decide the actual width in case of min/max/fixed
+			tileWidth := decideWidth(newSize, tl)
+			// append to total
 			totalHeight += tileHeight
 			if tileHeight > 0 {
-				tile.SetSize(Size{Width: tl.Size.Width, Height: tileHeight, Weight: weight})
+				// set new size to tile
+				newSize.Width = tileWidth
+				newSize.Height = tileHeight
+				tile.SetSize(newSize)
 			}
 		}
 	}
 	leftoverHeight := tl.Size.Height - totalHeight
 	leftoverWidth := tl.Size.Width - totalWidth
-	lastTile := tl.Tiles[len(tl.Tiles)-1]
-	lastTileSize := lastTile.GetSize()
+	// lastTile := tl.Tiles[len(tl.Tiles)-1]
+	// lastTileSize := lastTile.GetSize()
 	if leftoverHeight != 0 {
-		lastTile.SetSize(Size{Width: lastTileSize.Width, Height: lastTileSize.Height + leftoverHeight, Weight: lastTileSize.Weight})
+		// lastTileSize.Height += leftoverHeight
+		// lastTileSize.Height = decideHeight(lastTileSize, tl)
+		// lastTile.SetSize(lastTileSize)
 	}
 	if leftoverWidth != 0 {
-		lastTile.SetSize(Size{Width: lastTileSize.Width + leftoverWidth, Height: lastTileSize.Height, Weight: lastTileSize.Weight})
+		// lastTileSize.Width += leftoverWidth
+		// lastTileSize.Width = decideWidth(lastTileSize, tl)
+		// lastTile.SetSize(lastTileSize)
 	}
+}
+
+func decideWidth(s Size, layout *TileLayout) int {
+	availableWidth := layout.Size.Width
+	if s.FixedWidth > 0 {
+		// if fixed, return the minimum of the fixed or the available
+		return min(availableWidth, s.FixedWidth)
+	}
+
+	// calculate height based on weight and available
+	w := int(float64(availableWidth) * s.Weight)
+
+	// if max defined and calculated is more, return the max
+	if s.MaxWidth > 0 && w > s.MaxWidth {
+		return s.MaxWidth
+	}
+
+	// if min defined and calculated is less, return the min
+	if s.MinWidth > 0 && w < s.MinWidth {
+		return s.MinWidth
+	}
+
+	if layout.Direction == Vertical {
+		// for vertical layout, if min is defined, return the maximum of avalilable and minimum
+		if s.MinWidth > 0 {
+			return max(availableWidth, s.MinWidth)
+		}
+		// for vertical layout, if max is defined, return the minimum of available and maximum
+		if s.MaxWidth > 0 {
+			return min(availableWidth, s.MaxWidth)
+		}
+		// if none, return the available
+		return availableWidth
+	}
+	// no constraints - return calculated
+	return w
+}
+
+func decideHeight(s Size, layout *TileLayout) int {
+	availableHeight := layout.Size.Height
+	if s.FixedHeight > 0 {
+		// if fixed, return the minimum of the fixed or the available
+		return min(availableHeight, s.FixedHeight)
+	}
+
+	// calculate height based on weight and available
+	h := int(float64(availableHeight) * s.Weight)
+
+	// if max defined and calculated is more, return the max
+	if s.MaxHeight > 0 && h > s.MaxHeight {
+		return s.MaxHeight
+	}
+
+	// if min defined and calculated is less, return the min
+	if s.MinHeight > 0 && h < s.MinHeight {
+		return s.MinHeight
+	}
+	if layout.Direction == Horizontal {
+		// for horizontal layout, if min is defined, return the maximum of avalilable and minimum
+		if s.MinHeight > 0 {
+			return max(availableHeight, s.MinHeight)
+		}
+		// for horizontal layout, if max is defined, return the minimum of available and maximum
+		if s.MaxHeight > 0 {
+			return min(availableHeight, s.MaxHeight)
+		}
+		// if none, return the available
+		return availableHeight
+	}
+	// no constraints - return calculated
+	return h
 }
