@@ -1,6 +1,9 @@
 package tilelayout
 
 import (
+	"fmt"
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -51,14 +54,46 @@ const (
 	Vertical
 )
 
+type Metrics struct {
+	RenderTime  time.Duration
+	RenderCount int
+	TotalTime   time.Duration
+	AverageTime time.Duration
+}
+
+// Optional: Get metrics report
+func (tl *TileLayout) GetMetricsReport() string {
+	return fmt.Sprintf(
+		"Render Count: %d"+
+			"Last Duration: %v"+
+			"Average Duration: %v"+
+			"Total Time: %v",
+		tl.Metrics.RenderCount,
+		tl.Metrics.RenderTime,
+		tl.Metrics.AverageTime,
+		tl.Metrics.TotalTime,
+	)
+}
+
 type TileLayout struct {
-	Name        string
-	Size        Size
-	Tiles       []Tile
-	Proportions []float64
-	Direction   Direction
-	Root        bool
-	Parent      Tile
+	Name             string
+	Size             Size
+	Tiles            []Tile
+	Proportions      []float64
+	Direction        Direction
+	Root             bool
+	Parent           Tile
+	TotalFixedWidth  int
+	TotalFixedHeight int
+	Metrics          Metrics
+}
+
+func NewRoot(direction Direction) *TileLayout {
+	return &TileLayout{
+		Name:      "Root",
+		Direction: direction,
+		Root:      true,
+	}
 }
 
 func (tl *TileLayout) GetName() string {
@@ -87,6 +122,8 @@ func (tl *TileLayout) Init() tea.Cmd {
 
 func (tl *TileLayout) Add(tile Tile) {
 	tile.SetParent(tl)
+	tl.TotalFixedWidth += tile.GetSize().FixedWidth
+	tl.TotalFixedHeight += tile.GetSize().FixedHeight
 	tl.Tiles = append(tl.Tiles, tile)
 }
 
@@ -104,7 +141,13 @@ func (tl *TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			tl.Size.Height = msg.Height
 			tl.Size.Weight = 1
 		}
+		start := time.Now()
 		tl.layout()
+		elapsed := time.Since(start)
+		tl.Metrics.RenderTime = elapsed
+		tl.Metrics.RenderCount++
+		tl.Metrics.TotalTime += elapsed
+		tl.Metrics.AverageTime = tl.Metrics.TotalTime / time.Duration(tl.Metrics.RenderCount)
 	}
 
 	for i, tile := range tl.Tiles {
@@ -181,6 +224,82 @@ func (tl *TileLayout) layout() {
 			}
 		}
 	}
+	somethingResized := true
+	sanityCheck := 0
+	for somethingResized {
+		sanityCheck++
+		totalWidth, totalHeight, somethingResized = tl.distributeLeftover(totalWidth, totalHeight)
+		if sanityCheck > 100 {
+			panic("layout is unable to size itself for more than 100 iterations")
+		}
+	}
+}
+
+func CanGrowHeight(t Tile) bool {
+	size := t.GetSize()
+	return size.FixedWidth == 0 && size.Width < size.MaxWidth
+}
+
+func CanGrowWidth(t Tile) bool {
+	size := t.GetSize()
+	return size.FixedWidth == 0 && (size.MaxWidth == 0 || size.Width < size.MaxWidth)
+}
+
+func (tl *TileLayout) distributeLeftover(totalWidth, totalHeight int) (int, int, bool) {
+	leftoverWidth := tl.Size.Width - totalWidth
+	leftoverHeight := tl.Size.Height - totalHeight
+	if leftoverHeight == 0 && leftoverWidth == 0 {
+		return totalWidth, totalHeight, false
+	}
+	somethingResized := false
+	sumGrowableWeight := 0.0
+	for _, tile := range tl.Tiles {
+		weight := tile.GetSize().Weight
+		switch tl.Direction {
+		case Horizontal:
+			if CanGrowWidth(tile) {
+				sumGrowableWeight += weight
+			}
+		case Vertical:
+			if CanGrowHeight(tile) {
+				sumGrowableWeight += weight
+			}
+		}
+	}
+
+	for _, tile := range tl.Tiles {
+		switch tl.Direction {
+		case Horizontal:
+			if CanGrowWidth(tile) && leftoverWidth > 0 {
+				size := tile.GetSize()
+				normalizedWeight := size.Weight / sumGrowableWeight
+				toAdd := max(1, leftoverWidth*int(normalizedWeight))
+				if size.MaxWidth > 0 && size.Width+toAdd > size.MaxWidth {
+					toAdd = (size.MaxWidth - size.Width)
+				}
+				size.Width += toAdd
+				tile.SetSize(size)
+				somethingResized = true
+				totalWidth += toAdd
+				leftoverWidth -= toAdd
+			}
+		case Vertical:
+			if CanGrowHeight(tile) && leftoverHeight > 0 {
+				size := tile.GetSize()
+				normalizedWeight := size.Weight / sumGrowableWeight
+				toAdd := max(1, leftoverHeight*int(normalizedWeight))
+				if size.MaxHeight > 0 && size.Height+toAdd > size.MaxHeight {
+					toAdd = (size.MaxHeight - size.Height)
+				}
+				size.Height += toAdd
+				tile.SetSize(size)
+				somethingResized = true
+				totalHeight += toAdd
+				leftoverHeight -= toAdd
+			}
+		}
+	}
+	return totalWidth, totalHeight, somethingResized
 }
 
 func decideWidth(s Size, layout *TileLayout) int {
@@ -189,7 +308,9 @@ func decideWidth(s Size, layout *TileLayout) int {
 		// if fixed, return the minimum of the fixed or the available
 		return min(availableWidth, s.FixedWidth)
 	}
-
+	if layout.Direction == Horizontal {
+		availableWidth -= layout.TotalFixedWidth
+	}
 	// calculate height based on weight and available
 	w := int(float64(availableWidth) * s.Weight)
 
@@ -225,7 +346,9 @@ func decideHeight(s Size, layout *TileLayout) int {
 		// if fixed, return the minimum of the fixed or the available
 		return min(availableHeight, s.FixedHeight)
 	}
-
+	if layout.Direction == Vertical {
+		availableHeight -= layout.TotalFixedHeight
+	}
 	// calculate height based on weight and available
 	h := int(float64(availableHeight) * s.Weight)
 
