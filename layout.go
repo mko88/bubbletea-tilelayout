@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// The Size structure and constraints for the layout	
 type Size struct {
 	Width       int
 	Height      int
@@ -20,24 +21,12 @@ type Size struct {
 	FixedHeight int
 }
 
+// Creates new Size
 func NewSize() Size {
 	return Size{}
 }
 
-func (s *Size) Copy() Size {
-	return Size{
-		Width:       s.Width,
-		Height:      s.Height,
-		Weight:      s.Weight,
-		MinWidth:    s.MinWidth,
-		MinHeight:   s.MaxHeight,
-		MaxWidth:    s.MaxWidth,
-		MaxHeight:   s.MaxHeight,
-		FixedWidth:  s.FixedWidth,
-		FixedHeight: s.FixedHeight,
-	}
-}
-
+// Tile interface
 type Tile interface {
 	tea.Model
 	GetName() string
@@ -47,11 +36,13 @@ type Tile interface {
 	SetParent(tile Tile)
 }
 
+// Message returned on layout update
 type LayoutUpdatedMsg struct {
 	Name    string
 	Metrics string
 }
 
+// The command to return the LayoutUpdatedMsg
 func (tl *TileLayout) layoutUpdated() tea.Cmd {
 	return func() tea.Msg {
 		return LayoutUpdatedMsg{
@@ -61,6 +52,7 @@ func (tl *TileLayout) layoutUpdated() tea.Cmd {
 	}
 }
 
+// The layout direction
 type Direction int
 
 const (
@@ -68,6 +60,7 @@ const (
 	Vertical
 )
 
+// Metric values for the layout
 type Metrics struct {
 	Time        time.Duration
 	RenderCount int
@@ -75,19 +68,11 @@ type Metrics struct {
 	AverageTime time.Duration
 }
 
-// Optional: Get metrics report
+// Return the layout metrics as string
 func (tl *TileLayout) GetMetricsReport() string {
 	return fmt.Sprintf(
-		"LayoutName: %v; "+
-			"LayoutedCount: %d; "+
-			"LastLayoutDuration: %v; "+
-			"AverageDuration: %v; "+
-			"TotalTime: %v",
-		tl.Name,
-		tl.Metrics.RenderCount,
-		tl.Metrics.Time,
-		tl.Metrics.AverageTime,
-		tl.Metrics.TotalTime,
+		"LayoutName: %v; LayoutedCount: %d; LastLayoutDuration: %v; AverageDuration: %v; TotalTime: %v",
+		tl.Name, tl.Metrics.RenderCount, tl.Metrics.Time, tl.Metrics.AverageTime, tl.Metrics.TotalTime,
 	)
 }
 
@@ -97,45 +82,26 @@ type TileLayout struct {
 	Tiles            []Tile
 	Proportions      []float64
 	Direction        Direction
-	Root             bool
 	Parent           Tile
 	TotalFixedWidth  int
 	TotalFixedHeight int
 	Metrics          Metrics
 }
 
-func NewRoot(direction Direction) TileLayout {
+func NewTileLayout(direction Direction) TileLayout {
 	return TileLayout{
 		Name:      "Root",
 		Direction: direction,
-		Root:      true,
 	}
 }
 
-func (tl *TileLayout) GetName() string {
-	return tl.Name
-}
+func (tl *TileLayout) GetName() string       { return tl.Name }
+func (tl *TileLayout) GetSize() Size         { return tl.Size }
+func (tl *TileLayout) SetSize(size Size)     { tl.Size = size }
+func (tl *TileLayout) GetParent() Tile       { return tl.Parent }
+func (tl *TileLayout) SetParent(parent Tile) { tl.Parent = parent }
 
-func (tl *TileLayout) GetSize() Size {
-	return tl.Size
-}
-
-func (tl *TileLayout) SetSize(size Size) {
-	tl.Size = size
-}
-
-func (tl *TileLayout) GetParent() Tile {
-	return tl.Parent
-}
-
-func (tl *TileLayout) SetParent(parent Tile) {
-	tl.Parent = parent
-}
-
-func (tl *TileLayout) Init() tea.Cmd {
-	return nil
-}
-
+// Add a tile. The parent of the tile is set to the layout.
 func (tl *TileLayout) Add(tile Tile) {
 	tile.SetParent(tl)
 	tl.TotalFixedWidth += tile.GetSize().FixedWidth
@@ -143,14 +109,18 @@ func (tl *TileLayout) Add(tile Tile) {
 	tl.Tiles = append(tl.Tiles, tile)
 }
 
+// If the layout have no parent, it's considered root.
 func (tl *TileLayout) isRoot() bool {
 	return tl.GetParent() == nil
 }
 
-func (tl *TileLayout) DoLayout(width, height int) {
+// Handle the WindowSizeMsg
+// If the layout is root, set its dimensions to the new window size and weight to 1.0.
+// Proceeds with layouting itself and record its metrics.
+func (tl *TileLayout) handleWindowSizeMsg(msg tea.WindowSizeMsg) {
 	if tl.isRoot() {
-		tl.Size.Width = width
-		tl.Size.Height = height
+		tl.Size.Width = msg.Width
+		tl.Size.Height = msg.Height
 		tl.Size.Weight = 1
 	}
 	start := time.Now()
@@ -162,12 +132,17 @@ func (tl *TileLayout) DoLayout(width, height int) {
 	tl.Metrics.AverageTime = tl.Metrics.TotalTime / time.Duration(tl.Metrics.RenderCount)
 }
 
+func (tl *TileLayout) Init() tea.Cmd { return nil }
+
+// Handle update messages from BubbleTea.
+// On WidnowSizeMsg, the layout is "layouted" and LayoutUpdatedMsg is additionally returned.
+// The message is forwarded to each tile.
 func (tl *TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		tl.DoLayout(msg.Width, msg.Height)
+		tl.handleWindowSizeMsg(msg)
 		cmds = append(cmds, tl.layoutUpdated())
 	}
 
@@ -182,6 +157,7 @@ func (tl *TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return tl, tea.Batch(cmds...)
 }
 
+// Render all tiles, joining them together.
 func (tl *TileLayout) View() string {
 	if len(tl.Tiles) == 0 {
 		return ""
@@ -201,6 +177,7 @@ func (tl *TileLayout) View() string {
 	return lipgloss.JoinVertical(lipgloss.Left, views...)
 }
 
+// Perform dimension calculation for all tiles in the layout.
 func (tl *TileLayout) layout() {
 	if len(tl.Tiles) == 0 {
 		return
@@ -245,27 +222,38 @@ func (tl *TileLayout) layout() {
 			}
 		}
 	}
+	// distribute the leftover spaces caused by constraints and rounding errors
 	somethingResized := true
 	sanityCheck := 0
 	for somethingResized {
+		// we may need to run it multiple times - some tiles may hit their constraints and
+		// there would be still leftover space
 		sanityCheck++
 		totalWidth, totalHeight, somethingResized = tl.distributeLeftover(totalWidth, totalHeight)
+		// but more than 100 times is quite unusual. Panic out.
 		if sanityCheck > 100 {
 			panic("layout is unable to size itself for more than 100 iterations")
 		}
 	}
 }
 
-func CanGrowHeight(t Tile) bool {
-	size := t.GetSize()
-	return size.FixedHeight == 0 && (size.MaxHeight == 0 || size.Height < size.MaxHeight)
-}
-
-func CanGrowWidth(t Tile) bool {
+// A tile can grow width when no fixed width is set and either no max width is set, or
+// the current width is less than the max width
+func canGrowWidth(t Tile) bool {
 	size := t.GetSize()
 	return size.FixedWidth == 0 && (size.MaxWidth == 0 || size.Width < size.MaxWidth)
 }
 
+// A tile can grow height when no fixed height is set and either no max height is set, or
+// the current height is less than the max height
+func canGrowHeight(t Tile) bool {
+	size := t.GetSize()
+	return size.FixedHeight == 0 && (size.MaxHeight == 0 || size.Height < size.MaxHeight)
+}
+
+// Distribute the leftover space. The sum weight of all growable tiles is calculated
+// and distributed between them. Maximum constraints are respected. In case there is
+// still leftover space, but no growable tiles, the dimensions are left as they are.
 func (tl *TileLayout) distributeLeftover(totalWidth, totalHeight int) (int, int, bool) {
 	leftoverWidth := tl.Size.Width - totalWidth
 	leftoverHeight := tl.Size.Height - totalHeight
@@ -278,11 +266,11 @@ func (tl *TileLayout) distributeLeftover(totalWidth, totalHeight int) (int, int,
 		weight := tile.GetSize().Weight
 		switch tl.Direction {
 		case Horizontal:
-			if CanGrowWidth(tile) {
+			if canGrowWidth(tile) {
 				sumGrowableWeight += weight
 			}
 		case Vertical:
-			if CanGrowHeight(tile) {
+			if canGrowHeight(tile) {
 				sumGrowableWeight += weight
 			}
 		}
@@ -291,7 +279,7 @@ func (tl *TileLayout) distributeLeftover(totalWidth, totalHeight int) (int, int,
 	for _, tile := range tl.Tiles {
 		switch tl.Direction {
 		case Horizontal:
-			if CanGrowWidth(tile) && leftoverWidth > 0 {
+			if canGrowWidth(tile) && leftoverWidth > 0 {
 				size := tile.GetSize()
 				normalizedWeight := size.Weight / sumGrowableWeight
 				toAdd := max(1, leftoverWidth*int(normalizedWeight))
@@ -305,7 +293,7 @@ func (tl *TileLayout) distributeLeftover(totalWidth, totalHeight int) (int, int,
 				leftoverWidth -= toAdd
 			}
 		case Vertical:
-			if CanGrowHeight(tile) && leftoverHeight > 0 {
+			if canGrowHeight(tile) && leftoverHeight > 0 {
 				size := tile.GetSize()
 				normalizedWeight := size.Weight / sumGrowableWeight
 				toAdd := max(1, leftoverHeight*int(normalizedWeight))
@@ -323,6 +311,16 @@ func (tl *TileLayout) distributeLeftover(totalWidth, totalHeight int) (int, int,
 	return totalWidth, totalHeight, somethingResized
 }
 
+// Decide the width of a tile in available space:
+// 1. If fixed is defined, the minimum between the fixed and available is returned.
+// 2. Total fixed width is subtracted from the available width.
+// 3. Width is calucalated based on the weight.
+// 4. If calculated is more than the max, max is returned.
+// 5. If calculated is less than the min, min is returned.
+// 6. If the layout is vertical, the available width would be used as default.
+// 6.1 If min is defined, the maximum between the min and available is returned.
+// 6.2 If max is defined, the minimum between the max and available is returned.
+// 7. If there are no constraint, the calculated (3.) width is returned.
 func decideWidth(s Size, layout *TileLayout) int {
 	availableWidth := layout.Size.Width
 	if s.FixedWidth > 0 {
@@ -351,6 +349,16 @@ func decideWidth(s Size, layout *TileLayout) int {
 	return w
 }
 
+// Decide the height of a tile in available space:
+// 1. If fixed is defined, the minimum between the fixed and available is returned.
+// 2. Total fixed height is subtracted from the available height.
+// 3. Height is calucalated based on the weight.
+// 4. If calculated is more than the max, max is returned.
+// 5. If calculated is less than the min, min is returned.
+// 6. If the layout is horizontal, the available height would be used as default.
+// 6.1 If min is defined, the maximum between the min and available is returned.
+// 6.2 If max is defined, the minimum between the max and available is returned.
+// 7. If there are no constraint, the calculated (3.) height is returned.
 func decideHeight(s Size, layout *TileLayout) int {
 	availableHeight := layout.Size.Height
 	if s.FixedHeight > 0 {
