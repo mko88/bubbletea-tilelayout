@@ -29,8 +29,7 @@ The `demo/` directory contains examples:
 Run the demo:
 
 ```bash
-cd demo
-go build
+cd demo/demolayouts
 go run .
 ```
 
