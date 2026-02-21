@@ -143,28 +143,32 @@ func (tl *TileLayout) isRoot() bool {
 	return tl.GetParent() == nil
 }
 
+func (tl *TileLayout) DoLayout(width, height int) {
+	if tl.isRoot() {
+		tl.Size.Width = width
+		tl.Size.Height = height
+		tl.Size.Weight = 1
+	}
+	tl.BeforeLayout(tl)
+	start := time.Now()
+	tl.layout()
+	elapsed := time.Since(start)
+	for _, tile := range tl.Tiles {
+		tile.AfterLayout(tl)
+	}
+	tl.AfterLayout(tl)
+	tl.Metrics.RenderTime = elapsed
+	tl.Metrics.RenderCount++
+	tl.Metrics.TotalTime += elapsed
+	tl.Metrics.AverageTime = tl.Metrics.TotalTime / time.Duration(tl.Metrics.RenderCount)
+}
+
 func (tl *TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		if tl.isRoot() {
-			tl.Size.Width = msg.Width
-			tl.Size.Height = msg.Height
-			tl.Size.Weight = 1
-		}
-		tl.BeforeLayout(tl)
-		start := time.Now()
-		tl.layout()
-		elapsed := time.Since(start)
-		for _, tile := range tl.Tiles {
-			tile.AfterLayout(tl)
-		}
-		tl.AfterLayout(tl)
-		tl.Metrics.RenderTime = elapsed
-		tl.Metrics.RenderCount++
-		tl.Metrics.TotalTime += elapsed
-		tl.Metrics.AverageTime = tl.Metrics.TotalTime / time.Duration(tl.Metrics.RenderCount)
+		tl.DoLayout(msg.Width, msg.Height)
 	}
 
 	for i, tile := range tl.Tiles {
