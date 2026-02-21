@@ -10,7 +10,7 @@ import (
 func main() {
 	// m := initialModelMinimal()
 	// m := initialModelWithConstraints()
-	m := initialModelWeightsOnly()
+	m := NewDemoModel()
 	p := tea.NewProgram(m, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {

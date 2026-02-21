@@ -34,19 +34,16 @@ func NewCustomStatusTile(size tl.Size, name string, content string) tiles.Custom
 	}
 }
 
-func initialModelMinimal() DemoModel {
+func initialModelMinimal() tl.TileLayout {
 	root := tl.NewRoot(tl.Vertical)
 	box := NewViewportTileMinimal(tl.Size{Weight: 1.00}, "Box1", true)
 	status := NewCustomStatusTile(tl.Size{FixedHeight: 1}, "Status", "I am the status tile. I have a fixed height of 1 and take up 100% space.")
 	root.Add(&box)
 	root.Add(&status)
-	return DemoModel{
-		layout:    &root,
-		statusBar: &status,
-	}
+	return root
 }
 
-func initialModelWithConstraints() DemoModel {
+func initialModelWithConstraints() tl.TileLayout {
 	root := tl.NewRoot(tl.Vertical)
 	sub1 := tl.TileLayout{
 		Name:      "Sub-1",
@@ -83,13 +80,10 @@ func initialModelWithConstraints() DemoModel {
 
 	root.Add(&sub1)
 	root.Add(&status)
-	return DemoModel{
-		layout:    &root,
-		statusBar: &status,
-	}
+	return root
 }
 
-func initialModelWeightsOnly() DemoModel {
+func initialModelWeightsOnly() tl.TileLayout {
 	root := tl.NewRoot(tl.Vertical)
 	sub1 := tl.TileLayout{
 		Name:      "Sub-1",
@@ -126,8 +120,5 @@ func initialModelWeightsOnly() DemoModel {
 
 	root.Add(&sub1)
 	root.Add(&status)
-	return DemoModel{
-		layout:    &root,
-		statusBar: &status,
-	}
+	return root
 }

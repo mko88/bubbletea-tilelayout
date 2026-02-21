@@ -38,7 +38,7 @@ func (vt *ViewportTileMinimal) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		vt.Content.Width = newWidth
 		vt.Content.Height = newHeight
-		vt.Content.SetContent("Just received layout update message")
+		vt.Content.SetContent("Press 'tab' to cycle to other layouts.\nTo quit press 'q' or 'ctrl+c'")
 	}
 	return vt, nil
 }
