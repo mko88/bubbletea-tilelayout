@@ -11,13 +11,11 @@ type DemoModel struct {
 }
 
 func (d DemoModel) Init() tea.Cmd {
-	d.layout.Init()
-	return nil
+	return d.layout.Init()
 }
 
 func (d DemoModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	d.layout.Update(msg)
-	return d, nil
+	return d.layout.Update(msg)
 }
 
 func (d DemoModel) View() string {

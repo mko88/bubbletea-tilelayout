@@ -45,8 +45,20 @@ type Tile interface {
 	SetSize(size Size)
 	GetParent() Tile
 	SetParent(tile Tile)
-	BeforeLayout(tl *TileLayout)
-	AfterLayout(tl *TileLayout)
+}
+
+type LayoutUpdatedMsg struct {
+	Name    string
+	Metrics string
+}
+
+func (tl *TileLayout) layoutUpdated() tea.Cmd {
+	return func() tea.Msg {
+		return LayoutUpdatedMsg{
+			Name:    tl.Name,
+			Metrics: tl.GetMetricsReport(),
+		}
+	}
 }
 
 type Direction int
@@ -57,7 +69,7 @@ const (
 )
 
 type Metrics struct {
-	RenderTime  time.Duration
+	Time        time.Duration
 	RenderCount int
 	TotalTime   time.Duration
 	AverageTime time.Duration
@@ -66,12 +78,14 @@ type Metrics struct {
 // Optional: Get metrics report
 func (tl *TileLayout) GetMetricsReport() string {
 	return fmt.Sprintf(
-		"Render Count: %d "+
-			"Last Duration: %v "+
-			"Average Duration: %v "+
-			"Total Time: %v",
+		"LayoutName: %v "+
+			"Count: %d "+
+			"LayoutDuration: %v "+
+			"AverageDuration: %v "+
+			"TotalTime: %v",
+		tl.Name,
 		tl.Metrics.RenderCount,
-		tl.Metrics.RenderTime,
+		tl.Metrics.Time,
 		tl.Metrics.AverageTime,
 		tl.Metrics.TotalTime,
 	)
@@ -88,16 +102,6 @@ type TileLayout struct {
 	TotalFixedWidth  int
 	TotalFixedHeight int
 	Metrics          Metrics
-}
-
-// AfterLayout implements [Tile].
-func (*TileLayout) AfterLayout(tl *TileLayout) {
-	// panic("unimplemented")
-}
-
-// BeforeLayout implements [Tile].
-func (*TileLayout) BeforeLayout(tl *TileLayout) {
-	// panic("unimplemented")
 }
 
 func NewRoot(direction Direction) *TileLayout {
@@ -149,15 +153,10 @@ func (tl *TileLayout) DoLayout(width, height int) {
 		tl.Size.Height = height
 		tl.Size.Weight = 1
 	}
-	tl.BeforeLayout(tl)
 	start := time.Now()
 	tl.layout()
 	elapsed := time.Since(start)
-	for _, tile := range tl.Tiles {
-		tile.AfterLayout(tl)
-	}
-	tl.AfterLayout(tl)
-	tl.Metrics.RenderTime = elapsed
+	tl.Metrics.Time = elapsed
 	tl.Metrics.RenderCount++
 	tl.Metrics.TotalTime += elapsed
 	tl.Metrics.AverageTime = tl.Metrics.TotalTime / time.Duration(tl.Metrics.RenderCount)
@@ -169,6 +168,7 @@ func (tl *TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		tl.DoLayout(msg.Width, msg.Height)
+		cmds = append(cmds, tl.layoutUpdated())
 	}
 
 	for i, tile := range tl.Tiles {
@@ -326,74 +326,54 @@ func (tl *TileLayout) distributeLeftover(totalWidth, totalHeight int) (int, int,
 func decideWidth(s Size, layout *TileLayout) int {
 	availableWidth := layout.Size.Width
 	if s.FixedWidth > 0 {
-		// if fixed, return the minimum of the fixed or the available
 		return min(availableWidth, s.FixedWidth)
 	}
 	if layout.Direction == Horizontal {
 		availableWidth -= layout.TotalFixedWidth
 	}
-	// calculate height based on weight and available
 	w := int(float64(availableWidth) * s.Weight)
-
-	// if max defined and calculated is more, return the max
 	if s.MaxWidth > 0 && w > s.MaxWidth {
 		return s.MaxWidth
 	}
-
-	// if min defined and calculated is less, return the min
 	if s.MinWidth > 0 && w < s.MinWidth {
 		return s.MinWidth
 	}
 
 	if layout.Direction == Vertical {
-		// for vertical layout, if min is defined, return the maximum of avalilable and minimum
 		if s.MinWidth > 0 {
 			return max(availableWidth, s.MinWidth)
 		}
-		// for vertical layout, if max is defined, return the minimum of available and maximum
 		if s.MaxWidth > 0 {
 			return min(availableWidth, s.MaxWidth)
 		}
-		// if none, return the available
 		return availableWidth
 	}
-	// no constraints - return calculated
 	return w
 }
 
 func decideHeight(s Size, layout *TileLayout) int {
 	availableHeight := layout.Size.Height
 	if s.FixedHeight > 0 {
-		// if fixed, return the minimum of the fixed or the available
 		return min(availableHeight, s.FixedHeight)
 	}
 	if layout.Direction == Vertical {
 		availableHeight -= layout.TotalFixedHeight
 	}
-	// calculate height based on weight and available
 	h := int(float64(availableHeight) * s.Weight)
-
-	// if max defined and calculated is more, return the max
 	if s.MaxHeight > 0 && h > s.MaxHeight {
 		return s.MaxHeight
 	}
-
-	// if min defined and calculated is less, return the min
 	if s.MinHeight > 0 && h < s.MinHeight {
 		return s.MinHeight
 	}
 	if layout.Direction == Horizontal {
-		// for horizontal layout, if min is defined, return the maximum of avalilable and minimum
 		if s.MinHeight > 0 {
 			return max(availableHeight, s.MinHeight)
 		}
-		// for horizontal layout, if max is defined, return the minimum of available and maximum
 		if s.MaxHeight > 0 {
 			return min(availableHeight, s.MaxHeight)
 		}
-		// if none, return the available
 		return availableHeight
 	}
-	// no constraints - return calculated
 	return h
 }

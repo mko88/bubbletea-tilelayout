@@ -18,16 +18,6 @@ type ViewportTile struct {
 	BoxBorder bool
 }
 
-// AfterLayout implements [tilelayout.Tile].
-func (vt *ViewportTile) AfterLayout(tl *tl.TileLayout) {
-	// panic("unimplemented")
-}
-
-// BeforeLayout implements [tilelayout.Tile].
-func (vt *ViewportTile) BeforeLayout(tl *tl.TileLayout) {
-	// panic("unimplemented")
-}
-
 func (vt *ViewportTile) GetName() string {
 	return vt.Name
 }
@@ -52,23 +42,30 @@ func (vt *ViewportTile) SetParent(parent tl.Tile) {
 	vt.Parent = parent
 }
 
-func (vt *ViewportTile) Update(tea.Msg) (tea.Model, tea.Cmd) {
-	newWidth := vt.Size.Width
-	newHeight := vt.Size.Height
-	if vt.BoxBorder {
-		newWidth -= BOX_PAD
-		newHeight -= BOX_PAD
+func (vt *ViewportTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tl.LayoutUpdatedMsg:
+		if vt.Parent.GetName() != msg.Name {
+			// only react to parent updates
+			return vt, nil
+		}
+		newWidth := vt.Size.Width
+		newHeight := vt.Size.Height
+		if vt.BoxBorder {
+			newWidth -= BOX_PAD
+			newHeight -= BOX_PAD
+		}
+		vt.Content.Width = newWidth
+		vt.Content.Height = newHeight
+		borderDescription := "I don't have a box border."
+		if vt.BoxBorder {
+			borderDescription = "I have a box border."
+		}
+		sizeDescription := fmt.Sprintf("Currently my dimensions are: %s.", printSize(vt.Size))
+		text := fmt.Sprintf("I am viewport tile %v. %v %v\n%v", vt.Name, borderDescription, sizeDescription, msg.Metrics)
+		text = lipgloss.NewStyle().Width(newWidth).Render(text)
+		vt.Content.SetContent(text)
 	}
-	vt.Content.Width = newWidth
-	vt.Content.Height = newHeight
-	borderDescription := "I don't have a box border."
-	if vt.BoxBorder {
-		borderDescription = "I have a box border."
-	}
-	sizeDescription := fmt.Sprintf("Currently my dimensions are: %s.", printSize(vt.Size))
-	text := fmt.Sprintf("I am viewport tile %s. My parent is %s. %s %s", vt.Name, vt.Parent.GetName(), borderDescription, sizeDescription)
-	text = lipgloss.NewStyle().Width(newWidth).Render(text)
-	vt.Content.SetContent(text)
 	return vt, nil
 }
 

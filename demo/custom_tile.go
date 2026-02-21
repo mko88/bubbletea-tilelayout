@@ -13,17 +13,6 @@ type CustomTile struct {
 	Parent  tl.Tile
 }
 
-// AfterLayout implements [tilelayout.Tile].
-func (ct *CustomTile) AfterLayout(tl *tl.TileLayout) {
-	//panic("unimplemented")
-	ct.Content = tl.GetMetricsReport()
-}
-
-// BeforeLayout implements [tilelayout.Tile].
-func (ct *CustomTile) BeforeLayout(tl *tl.TileLayout) {
-	//panic("unimplemented")
-}
-
 func (ct *CustomTile) GetName() string {
 	return ct.Name
 }
@@ -48,8 +37,13 @@ func (ct *CustomTile) SetParent(parent tl.Tile) {
 	ct.Parent = parent
 }
 
-func (ct *CustomTile) Update(tea.Msg) (tea.Model, tea.Cmd) {
-	// the layout will calculate the size, based on the weight, nothing to do here
+func (ct *CustomTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tl.LayoutUpdatedMsg:
+		{
+			ct.Content = msg.Metrics
+		}
+	}
 	return ct, nil
 }
 
