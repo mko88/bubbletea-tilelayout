@@ -78,10 +78,10 @@ type Metrics struct {
 // Optional: Get metrics report
 func (tl *TileLayout) GetMetricsReport() string {
 	return fmt.Sprintf(
-		"LayoutName: %v "+
-			"Count: %d "+
-			"LayoutDuration: %v "+
-			"AverageDuration: %v "+
+		"LayoutName: %v; "+
+			"LayoutedCount: %d; "+
+			"LastLayoutDuration: %v; "+
+			"AverageDuration: %v; "+
 			"TotalTime: %v",
 		tl.Name,
 		tl.Metrics.RenderCount,

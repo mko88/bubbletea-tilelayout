@@ -41,6 +41,10 @@ func (ct *CustomTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tl.LayoutUpdatedMsg:
 		{
+			if ct.Parent.GetName() != msg.Name {
+				// only react to parent updates
+				return ct, nil
+			}
 			ct.Content = msg.Metrics
 		}
 	}
