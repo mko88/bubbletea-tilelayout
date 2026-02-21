@@ -15,7 +15,18 @@ func (d DemoModel) Init() tea.Cmd {
 }
 
 func (d DemoModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return d.layout.Update(msg)
+	var cmds []tea.Cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			return d, tea.Quit
+		}
+
+	}
+	_, cmd := d.layout.Update(msg)
+	cmds = append(cmds, cmd)
+	return d, tea.Batch(cmds...)
 }
 
 func (d DemoModel) View() string {

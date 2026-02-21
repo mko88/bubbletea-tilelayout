@@ -18,29 +18,12 @@ type ViewportTile struct {
 	BoxBorder bool
 }
 
-func (vt *ViewportTile) GetName() string {
-	return vt.Name
-}
-
-func (vt *ViewportTile) GetSize() tl.Size {
-	return vt.Size
-}
-
-func (vt *ViewportTile) SetSize(size tl.Size) {
-	vt.Size = size
-}
-
-func (vt *ViewportTile) Init() tea.Cmd {
-	return nil
-}
-
-func (vt *ViewportTile) GetParent() tl.Tile {
-	return vt.Parent
-}
-
-func (vt *ViewportTile) SetParent(parent tl.Tile) {
-	vt.Parent = parent
-}
+func (vt *ViewportTile) GetName() string          { return vt.Name }
+func (vt *ViewportTile) GetSize() tl.Size         { return vt.Size }
+func (vt *ViewportTile) SetSize(size tl.Size)     { vt.Size = size }
+func (vt *ViewportTile) GetParent() tl.Tile       { return vt.Parent }
+func (vt *ViewportTile) SetParent(parent tl.Tile) { vt.Parent = parent }
+func (vt *ViewportTile) Init() tea.Cmd            { return nil }
 
 func (vt *ViewportTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {

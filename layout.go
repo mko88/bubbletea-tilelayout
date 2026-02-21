@@ -104,8 +104,8 @@ type TileLayout struct {
 	Metrics          Metrics
 }
 
-func NewRoot(direction Direction) *TileLayout {
-	return &TileLayout{
+func NewRoot(direction Direction) TileLayout {
+	return TileLayout{
 		Name:      "Root",
 		Direction: direction,
 		Root:      true,
