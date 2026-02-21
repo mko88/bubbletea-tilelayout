@@ -82,7 +82,30 @@ func (vt *ViewportTile) View() string {
 	return vt.Content.View()
 }
 
+var (
+	zeroStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("240")) // Dim gray
+	positiveStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("82"))  // Bright green
+)
+
+func styleInt(value int) string {
+	if value > 0 {
+		return positiveStyle.Render(fmt.Sprintf("%d", value))
+	}
+	return zeroStyle.Render(fmt.Sprintf("%d", value))
+}
+
+func styleFloat(value float64) string {
+	if value > 0 {
+		return positiveStyle.Render(fmt.Sprintf("%.2f", value))
+	}
+	return zeroStyle.Render(fmt.Sprintf("%.2f", value))
+}
+
 func printSize(s tl.Size) string {
-	return fmt.Sprintf("actual[w:%d,h:%d,W:%.2f] min[w:%d,h:%d] max[w:%d,h:%d] fixed[w:%d,h:%d]",
-		s.Width, s.Height, s.Weight, s.MinWidth, s.MinHeight, s.MaxWidth, s.MaxHeight, s.FixedWidth, s.FixedHeight)
+
+	return fmt.Sprintf("actual[w:%s,h:%s,W:%s] min[w:%s,h:%s] max[w:%s,h:%s] fixed[w:%s,h:%s]",
+		styleInt(s.Width), styleInt(s.Height), styleFloat(s.Weight),
+		styleInt(s.MinWidth), styleInt(s.MinHeight),
+		styleInt(s.MaxWidth), styleInt(s.MaxHeight),
+		styleInt(s.FixedWidth), styleInt(s.FixedHeight))
 }
