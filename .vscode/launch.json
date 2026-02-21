@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/demo",
+            "program": "${workspaceFolder}/demo/demolayouts",
             "console": "integratedTerminal",
             "env": {},
             "args": []
