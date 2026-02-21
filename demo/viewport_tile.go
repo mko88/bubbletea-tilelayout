@@ -18,6 +18,16 @@ type ViewportTile struct {
 	BoxBorder bool
 }
 
+// AfterLayout implements [tilelayout.Tile].
+func (vt *ViewportTile) AfterLayout(tl *tl.TileLayout) {
+	// panic("unimplemented")
+}
+
+// BeforeLayout implements [tilelayout.Tile].
+func (vt *ViewportTile) BeforeLayout(tl *tl.TileLayout) {
+	// panic("unimplemented")
+}
+
 func (vt *ViewportTile) GetName() string {
 	return vt.Name
 }

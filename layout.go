@@ -45,6 +45,8 @@ type Tile interface {
 	SetSize(size Size)
 	GetParent() Tile
 	SetParent(tile Tile)
+	BeforeLayout(tl *TileLayout)
+	AfterLayout(tl *TileLayout)
 }
 
 type Direction int
@@ -64,9 +66,9 @@ type Metrics struct {
 // Optional: Get metrics report
 func (tl *TileLayout) GetMetricsReport() string {
 	return fmt.Sprintf(
-		"Render Count: %d"+
-			"Last Duration: %v"+
-			"Average Duration: %v"+
+		"Render Count: %d "+
+			"Last Duration: %v "+
+			"Average Duration: %v "+
 			"Total Time: %v",
 		tl.Metrics.RenderCount,
 		tl.Metrics.RenderTime,
@@ -86,6 +88,16 @@ type TileLayout struct {
 	TotalFixedWidth  int
 	TotalFixedHeight int
 	Metrics          Metrics
+}
+
+// AfterLayout implements [Tile].
+func (*TileLayout) AfterLayout(tl *TileLayout) {
+	// panic("unimplemented")
+}
+
+// BeforeLayout implements [Tile].
+func (*TileLayout) BeforeLayout(tl *TileLayout) {
+	// panic("unimplemented")
 }
 
 func NewRoot(direction Direction) *TileLayout {
@@ -141,9 +153,14 @@ func (tl *TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			tl.Size.Height = msg.Height
 			tl.Size.Weight = 1
 		}
+		tl.BeforeLayout(tl)
 		start := time.Now()
 		tl.layout()
 		elapsed := time.Since(start)
+		for _, tile := range tl.Tiles {
+			tile.AfterLayout(tl)
+		}
+		tl.AfterLayout(tl)
 		tl.Metrics.RenderTime = elapsed
 		tl.Metrics.RenderCount++
 		tl.Metrics.TotalTime += elapsed
@@ -237,7 +254,7 @@ func (tl *TileLayout) layout() {
 
 func CanGrowHeight(t Tile) bool {
 	size := t.GetSize()
-	return size.FixedWidth == 0 && size.Width < size.MaxWidth
+	return size.FixedHeight == 0 && (size.MaxHeight == 0 || size.Height < size.MaxHeight)
 }
 
 func CanGrowWidth(t Tile) bool {

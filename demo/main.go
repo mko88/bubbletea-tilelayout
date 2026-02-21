@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	m := initialModelWithConstraints()
+	//m := initialModelWithConstraints()
+	m := initialModelWeightsOnly()
 	p := tea.NewProgram(m, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {

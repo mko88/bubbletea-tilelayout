@@ -13,6 +13,17 @@ type CustomTile struct {
 	Parent  tl.Tile
 }
 
+// AfterLayout implements [tilelayout.Tile].
+func (ct *CustomTile) AfterLayout(tl *tl.TileLayout) {
+	//panic("unimplemented")
+	ct.Content = tl.GetMetricsReport()
+}
+
+// BeforeLayout implements [tilelayout.Tile].
+func (ct *CustomTile) BeforeLayout(tl *tl.TileLayout) {
+	//panic("unimplemented")
+}
+
 func (ct *CustomTile) GetName() string {
 	return ct.Name
 }
