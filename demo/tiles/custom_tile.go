@@ -1,4 +1,4 @@
-package main
+package tiles
 
 import (
 	tea "github.com/charmbracelet/bubbletea"

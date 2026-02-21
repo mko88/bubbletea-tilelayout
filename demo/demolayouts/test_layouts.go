@@ -3,11 +3,12 @@ package main
 import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tl "github.com/mko88/bubbletea-tilelayout"
+	"github.com/mko88/bubbletea-tilelayout/demo/tiles"
 )
 
-func NewViewportTile(size tl.Size, name string, boxBorder bool) ViewportTile {
+func NewViewportTile(size tl.Size, name string, boxBorder bool) tiles.ViewportTile {
 	vp := viewport.New(10, 10)
-	return ViewportTile{
+	return tiles.ViewportTile{
 		Name:      name,
 		Content:   vp,
 		Size:      size,
@@ -15,9 +16,9 @@ func NewViewportTile(size tl.Size, name string, boxBorder bool) ViewportTile {
 	}
 }
 
-func NewViewportTileMinimal(size tl.Size, name string, boxBorder bool) ViewportTileMinimal {
+func NewViewportTileMinimal(size tl.Size, name string, boxBorder bool) tiles.ViewportTileMinimal {
 	vp := viewport.New(10, 10)
-	return ViewportTileMinimal{
+	return tiles.ViewportTileMinimal{
 		Name:      name,
 		Content:   vp,
 		Size:      size,
@@ -25,8 +26,8 @@ func NewViewportTileMinimal(size tl.Size, name string, boxBorder bool) ViewportT
 	}
 }
 
-func NewCustomStatusTile(size tl.Size, name string, content string) CustomTile {
-	return CustomTile{
+func NewCustomStatusTile(size tl.Size, name string, content string) tiles.CustomTile {
+	return tiles.CustomTile{
 		Name:    name,
 		Content: content,
 		Size:    size,

@@ -1,4 +1,4 @@
-package main
+package tiles
 
 import (
 	"github.com/charmbracelet/bubbles/viewport"
