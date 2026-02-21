@@ -26,6 +26,7 @@ func (vt *ViewportTile) SetParent(parent tl.Tile) { vt.Parent = parent }
 func (vt *ViewportTile) Init() tea.Cmd            { return nil }
 
 func (vt *ViewportTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+
 	switch msg := msg.(type) {
 	case tl.LayoutUpdatedMsg:
 		if vt.Parent.GetName() != msg.Name {
@@ -49,7 +50,11 @@ func (vt *ViewportTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		text = lipgloss.NewStyle().Width(newWidth).Render(text)
 		vt.Content.SetContent(text)
 	}
-	return vt, nil
+	var cmd tea.Cmd
+	cmds := []tea.Cmd{}
+	vt.Content, cmd = vt.Content.Update(msg)
+	cmds = append(cmds, cmd)
+	return vt, tea.Batch(cmds...)
 }
 
 func (vt *ViewportTile) View() string {
