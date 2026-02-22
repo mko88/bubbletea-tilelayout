@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// The Size structure and constraints for the layout	
+// The Size structure and constraints for the layout
 type Size struct {
 	Width       int
 	Height      int
@@ -80,7 +80,6 @@ type TileLayout struct {
 	Name             string
 	Size             Size
 	Tiles            []Tile
-	Proportions      []float64
 	Direction        Direction
 	Parent           Tile
 	TotalFixedWidth  int
@@ -95,10 +94,10 @@ func NewTileLayout(direction Direction) TileLayout {
 	}
 }
 
-func (tl *TileLayout) GetName() string       { return tl.Name }
-func (tl *TileLayout) GetSize() Size         { return tl.Size }
+func (tl TileLayout) GetName() string        { return tl.Name }
+func (tl TileLayout) GetSize() Size          { return tl.Size }
 func (tl *TileLayout) SetSize(size Size)     { tl.Size = size }
-func (tl *TileLayout) GetParent() Tile       { return tl.Parent }
+func (tl TileLayout) GetParent() Tile        { return tl.Parent }
 func (tl *TileLayout) SetParent(parent Tile) { tl.Parent = parent }
 
 // Add a tile. The parent of the tile is set to the layout.
@@ -132,12 +131,12 @@ func (tl *TileLayout) handleWindowSizeMsg(msg tea.WindowSizeMsg) {
 	tl.Metrics.AverageTime = tl.Metrics.TotalTime / time.Duration(tl.Metrics.RenderCount)
 }
 
-func (tl *TileLayout) Init() tea.Cmd { return nil }
+func (tl TileLayout) Init() tea.Cmd { return nil }
 
 // Handle update messages from BubbleTea.
 // On WidnowSizeMsg, the layout is "layouted" and LayoutUpdatedMsg is additionally returned.
 // The message is forwarded to each tile.
-func (tl *TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (tl TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
@@ -154,11 +153,11 @@ func (tl *TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return tl, tea.Batch(cmds...)
+	return &tl, tea.Batch(cmds...)
 }
 
 // Render all tiles, joining them together.
-func (tl *TileLayout) View() string {
+func (tl TileLayout) View() string {
 	if len(tl.Tiles) == 0 {
 		return ""
 	}
