@@ -29,8 +29,8 @@ func (vt *ViewportTileMinimal) Init() tea.Cmd { return nil }
 
 func (vt *ViewportTileMinimal) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tl.LayoutUpdatedMsg:
-		if vt.Parent.GetName() != msg.Name {
+	case tl.TileUpdatedMsg:
+		if vt.GetName() != msg.Name {
 			// only react to parent updates
 			return vt, nil
 		}

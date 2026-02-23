@@ -1,7 +1,6 @@
 package tilelayout
 
 import (
-	"fmt"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -29,7 +28,7 @@ func NewSize() Size {
 // Message returned on layout update
 type LayoutUpdatedMsg struct {
 	Name    string
-	Metrics string
+	Metrics Metrics
 }
 
 // The command to return the LayoutUpdatedMsg
@@ -37,7 +36,7 @@ func (tl *TileLayout) layoutUpdated() tea.Cmd {
 	return func() tea.Msg {
 		return LayoutUpdatedMsg{
 			Name:    tl.Name,
-			Metrics: tl.GetMetricsReport(),
+			Metrics: tl.Metrics,
 		}
 	}
 }
@@ -52,18 +51,7 @@ const (
 
 // Metric values for the layout
 type Metrics struct {
-	Time        time.Duration
-	RenderCount int
-	TotalTime   time.Duration
-	AverageTime time.Duration
-}
-
-// Return the layout metrics as string
-func (tl *TileLayout) GetMetricsReport() string {
-	return fmt.Sprintf(
-		"LayoutName: %v; LayoutedCount: %d; LastLayoutDuration: %v; AverageDuration: %v; TotalTime: %v",
-		tl.Name, tl.Metrics.RenderCount, tl.Metrics.Time, tl.Metrics.AverageTime, tl.Metrics.TotalTime,
-	)
+	RenderTime time.Duration
 }
 
 type TileLayout struct {
@@ -110,19 +98,17 @@ func (tl *TileLayout) isRoot() bool {
 // Handle the WindowSizeMsg
 // If the layout is root, set its dimensions to the new window size and weight to 1.0.
 // Proceeds with layouting itself and record its metrics.
-func (tl *TileLayout) handleWindowSizeMsg(msg tea.WindowSizeMsg) {
+func (tl *TileLayout) handleWindowSizeMsg(msg tea.WindowSizeMsg) []tea.Cmd {
 	if tl.isRoot() {
 		tl.Size.Width = msg.Width
 		tl.Size.Height = msg.Height
 		tl.Size.Weight = 1
 	}
 	start := time.Now()
-	tl.layout()
+	cmds := tl.layout()
 	elapsed := time.Since(start)
-	tl.Metrics.Time = elapsed
-	tl.Metrics.RenderCount++
-	tl.Metrics.TotalTime += elapsed
-	tl.Metrics.AverageTime = tl.Metrics.TotalTime / time.Duration(tl.Metrics.RenderCount)
+	tl.Metrics.RenderTime = elapsed
+	return cmds
 }
 
 func (tl TileLayout) Init() tea.Cmd { return nil }
@@ -135,12 +121,20 @@ func (tl TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		tl.handleWindowSizeMsg(msg)
+		cmds = tl.handleWindowSizeMsg(msg)
 		cmds = append(cmds, tl.layoutUpdated())
-	}
-
-	for i, tile := range tl.Tiles {
-		if tile != nil {
+		for i, tile := range tl.Tiles {
+			newMsg := tea.WindowSizeMsg{
+				Width:  tile.GetSize().Width,
+				Height: tile.GetSize().Height,
+			}
+			updated, ucmds := tile.Update(newMsg)
+			tl.Tiles[i] = updated.(Tile)
+			cmds = append(cmds, ucmds)
+			cmds = append(cmds, NewTileUpdatedMsg(tile))
+		}
+	case TileUpdatedMsg:
+		for i, tile := range tl.Tiles {
 			updated, cmd := tile.Update(msg)
 			tl.Tiles[i] = updated.(Tile)
 			cmds = append(cmds, cmd)
@@ -171,9 +165,10 @@ func (tl TileLayout) View() string {
 }
 
 // Perform dimension calculation for all tiles in the layout.
-func (tl *TileLayout) layout() {
+func (tl *TileLayout) layout() []tea.Cmd {
+	var cmds []tea.Cmd
 	if len(tl.Tiles) == 0 {
-		return
+		return cmds
 	}
 	totalHeight := 0
 	totalWidth := 0
@@ -228,6 +223,10 @@ func (tl *TileLayout) layout() {
 			panic("layout is unable to size itself for more than 100 iterations")
 		}
 	}
+	for _, tile := range tl.Tiles {
+		cmds = append(cmds, NewTileUpdatedMsg(tile))
+	}
+	return cmds
 }
 
 // A tile can grow width when no fixed width is set and either no max width is set, or

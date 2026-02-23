@@ -17,6 +17,20 @@ type BaseTile struct {
 	Parent Tile
 }
 
+type TileUpdatedMsg struct {
+	Name string
+	Size Size
+}
+
+func NewTileUpdatedMsg(t Tile) tea.Cmd {
+	return func() tea.Msg {
+		return TileUpdatedMsg{
+			Name: t.GetName(),
+			Size: t.GetSize(),
+		}
+	}
+}
+
 func (bt BaseTile) GetName() string        { return bt.Name }
 func (bt BaseTile) GetSize() Size          { return bt.Size }
 func (bt *BaseTile) SetSize(size Size)     { bt.Size = size }

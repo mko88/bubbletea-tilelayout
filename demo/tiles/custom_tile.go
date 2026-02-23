@@ -1,6 +1,8 @@
 package tiles
 
 import (
+	"fmt"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	tl "github.com/mko88/bubbletea-tilelayout"
@@ -31,9 +33,14 @@ func (ct *CustomTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// only react to parent updates
 				return ct, nil
 			}
-			ct.Content = msg.Metrics
+			ct.Content = fmt.Sprintf("%s: %v", msg.Name, msg.Metrics)
+		}
+	case tl.TileUpdatedMsg:
+		if ct.GetName() == msg.Name {
+			ct.Content = fmt.Sprintf("%v", msg)
 		}
 	}
+
 	return ct, nil
 }
 

@@ -32,8 +32,8 @@ func (vt *ViewportTile) Init() tea.Cmd { return nil }
 func (vt *ViewportTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
-	case tl.LayoutUpdatedMsg:
-		if vt.Parent.GetName() != msg.Name {
+	case tl.TileUpdatedMsg:
+		if vt.GetName() != msg.Name {
 			// only react to parent updates
 			return vt, nil
 		}
@@ -50,7 +50,7 @@ func (vt *ViewportTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			borderDescription = "I have a box border."
 		}
 		sizeDescription := fmt.Sprintf("Currently my dimensions are: %s.", printSize(vt.Size))
-		text := fmt.Sprintf("I am viewport tile %v. %v %v\n%v", vt.Name, borderDescription, sizeDescription, msg.Metrics)
+		text := fmt.Sprintf("I am viewport tile %v. %v %v", vt.Name, borderDescription, sizeDescription)
 		text = lipgloss.NewStyle().Width(newWidth).Render(text)
 		vt.Content.SetContent(text)
 	}
