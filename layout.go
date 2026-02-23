@@ -141,7 +141,7 @@ func (tl TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return &tl, tea.Batch(cmds...)
+	return tl, tea.Batch(cmds...)
 }
 
 // Render all tiles, joining them together.
