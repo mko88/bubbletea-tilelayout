@@ -7,18 +7,21 @@ import (
 )
 
 type CustomTile struct {
-	Name    string
+	*tl.BaseTile
 	Content string
-	Size    tl.Size
-	Parent  tl.Tile
 }
 
-func (ct *CustomTile) GetName() string          { return ct.Name }
-func (ct *CustomTile) GetSize() tl.Size         { return ct.Size }
-func (ct *CustomTile) SetSize(size tl.Size)     { ct.Size = size }
-func (ct *CustomTile) GetParent() tl.Tile       { return ct.Parent }
-func (ct *CustomTile) SetParent(parent tl.Tile) { ct.Parent = parent }
-func (ct *CustomTile) Init() tea.Cmd            { return nil }
+func NewCustomTile(size tl.Size, name string, content string) CustomTile {
+	return CustomTile{
+		BaseTile: &tl.BaseTile{
+			Name: name,
+			Size: size,
+		},
+		Content: content,
+	}
+}
+
+func (ct *CustomTile) Init() tea.Cmd { return nil }
 
 func (ct *CustomTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {

@@ -26,16 +26,6 @@ func NewSize() Size {
 	return Size{}
 }
 
-// Tile interface
-type Tile interface {
-	tea.Model
-	GetName() string
-	GetSize() Size
-	SetSize(size Size)
-	GetParent() Tile
-	SetParent(tile Tile)
-}
-
 // Message returned on layout update
 type LayoutUpdatedMsg struct {
 	Name    string
@@ -77,28 +67,32 @@ func (tl *TileLayout) GetMetricsReport() string {
 }
 
 type TileLayout struct {
-	Name             string
-	Size             Size
+	*BaseTile
 	Tiles            []Tile
 	Direction        Direction
-	Parent           Tile
 	TotalFixedWidth  int
 	TotalFixedHeight int
 	Metrics          Metrics
 }
 
-func NewTileLayout(direction Direction) TileLayout {
+func NewRoot(direction Direction) TileLayout {
 	return TileLayout{
-		Name:      "Root",
+		BaseTile: &BaseTile{
+			Name: "Root",
+		},
 		Direction: direction,
 	}
 }
 
-func (tl TileLayout) GetName() string        { return tl.Name }
-func (tl TileLayout) GetSize() Size          { return tl.Size }
-func (tl *TileLayout) SetSize(size Size)     { tl.Size = size }
-func (tl TileLayout) GetParent() Tile        { return tl.Parent }
-func (tl *TileLayout) SetParent(parent Tile) { tl.Parent = parent }
+func NewTileLayout(name string, direction Direction, size Size) TileLayout {
+	return TileLayout{
+		BaseTile: &BaseTile{
+			Name: name,
+			Size: size,
+		},
+		Direction: direction,
+	}
+}
 
 // Add a tile. The parent of the tile is set to the layout.
 func (tl *TileLayout) Add(tile Tile) {
