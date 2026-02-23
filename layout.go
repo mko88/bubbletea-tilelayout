@@ -133,6 +133,12 @@ func (tl TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, ucmds)
 			cmds = append(cmds, NewTileUpdatedMsg(tile))
 		}
+	case LayoutUpdatedMsg:
+		for i, tile := range tl.Tiles {
+			updated, ucmds := tile.Update(msg)
+			tl.Tiles[i] = updated.(Tile)
+			cmds = append(cmds, ucmds)
+		}
 	case TileUpdatedMsg:
 		for i, tile := range tl.Tiles {
 			updated, cmd := tile.Update(msg)

@@ -2,6 +2,8 @@ package tiles
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -10,6 +12,7 @@ import (
 
 type CustomTile struct {
 	*tl.BaseTile
+	Data    map[string]tl.Metrics
 	Content string
 }
 
@@ -19,7 +22,7 @@ func NewCustomTile(size tl.Size, name string, content string) CustomTile {
 			Name: name,
 			Size: size,
 		},
-		Content: content,
+		Data: make(map[string]tl.Metrics),
 	}
 }
 
@@ -28,16 +31,21 @@ func (ct *CustomTile) Init() tea.Cmd { return nil }
 func (ct *CustomTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tl.LayoutUpdatedMsg:
-		{
-			if ct.Parent.GetName() != msg.Name {
-				// only react to parent updates
-				return ct, nil
-			}
-			ct.Content = fmt.Sprintf("%s: %v", msg.Name, msg.Metrics)
+		ct.Data[msg.Name] = msg.Metrics
+		keys := make([]string, 0, len(ct.Data))
+		for k := range ct.Data {
+			keys = append(keys, k)
 		}
+		sort.Strings(keys)
+		var sb strings.Builder
+		fmt.Fprintf(&sb, "%v", "Layouting times: ")
+		for _, k := range keys {
+			fmt.Fprintf(&sb, "%v[%v] ", k, ct.Data[k])
+		}
+		ct.Content = sb.String()
 	case tl.TileUpdatedMsg:
 		if ct.GetName() == msg.Name {
-			ct.Content = fmt.Sprintf("%v", msg)
+			//
 		}
 	}
 
