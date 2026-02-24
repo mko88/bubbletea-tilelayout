@@ -145,8 +145,13 @@ func (tl TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			tl.Tiles[i] = updated.(Tile)
 			cmds = append(cmds, cmd)
 		}
+	default:
+		for i, tile := range tl.Tiles {
+			updated, cmd := tile.Update(msg)
+			tl.Tiles[i] = updated.(Tile)
+			cmds = append(cmds, cmd)
+		}
 	}
-
 	return tl, tea.Batch(cmds...)
 }
 
