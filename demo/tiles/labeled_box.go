@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	tl "github.com/mko88/bubbletea-tilelayout"
 )
 
 const (
@@ -30,6 +31,16 @@ func NewLabeledBox() LabeledBox {
 			PaddingLeft(1).
 			PaddingRight(1),
 	}
+}
+
+func RenderBox(label string, content string, size tl.Size) string {
+	box := NewLabeledBox()
+	box.BoxStyle = box.BoxStyle.
+		BorderForeground(lipgloss.Color("62")).
+		Padding(0, 0, 0, 0).
+		Width(size.Width - BOX_PAD).
+		Height(size.Height - BOX_PAD)
+	return box.Render(label, content, size.Width-BOX_PAD)
 }
 
 func (b LabeledBox) Render(label, content string, width int) string {

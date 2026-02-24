@@ -1,27 +1,18 @@
 package tiles
 
 import (
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	tl "github.com/mko88/bubbletea-tilelayout"
 )
 
 type ViewportTileMinimal struct {
-	*tl.BaseTile
-	Content   viewport.Model
-	BoxBorder bool
+	*BaseViewportTile
 }
 
 func NewViewportTileMinimal(size tl.Size, name string, boxBorder bool) ViewportTileMinimal {
-	vp := viewport.New(10, 10)
+	base := NewBaseViewportTile(size, name, boxBorder)
 	return ViewportTileMinimal{
-		BaseTile: &tl.BaseTile{
-			Name: name,
-			Size: size,
-		},
-		Content:   vp,
-		BoxBorder: boxBorder,
+		BaseViewportTile: &base,
 	}
 }
 
@@ -30,7 +21,7 @@ func (vt *ViewportTileMinimal) Init() tea.Cmd { return nil }
 func (vt *ViewportTileMinimal) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tl.TileUpdatedMsg:
-		if vt.GetName() != msg.Name {
+		if vt.Name != msg.Name {
 			// only react to parent updates
 			return vt, nil
 		}
@@ -49,13 +40,7 @@ func (vt *ViewportTileMinimal) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (vt *ViewportTileMinimal) View() string {
 	if vt.BoxBorder {
-		box := NewLabeledBox()
-		box.BoxStyle = box.BoxStyle.
-			BorderForeground(lipgloss.Color("62")).
-			Padding(0, 0, 0, 0).
-			Width(vt.Size.Width - BOX_PAD).
-			Height(vt.Size.Height - BOX_PAD)
-		return box.Render(vt.Name, vt.Content.View(), vt.Size.Width-BOX_PAD)
+		return RenderBox(vt.Name, vt.Content.View(), vt.Size)
 	}
 	return vt.Content.View()
 }
