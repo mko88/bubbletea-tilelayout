@@ -332,7 +332,10 @@ func decideWidth(s Size, layout *TileLayout) int {
 	if layout.Direction == Horizontal {
 		availableWidth -= layout.TotalFixedWidth
 	}
-	w := int(float64(availableWidth) * s.Weight)
+	w := availableWidth
+	if layout.Direction == Horizontal {
+		w = int(float64(availableWidth) * s.Weight)
+	}
 	if s.MaxWidth > 0 && w > s.MaxWidth {
 		return s.MaxWidth
 	}
@@ -370,7 +373,10 @@ func decideHeight(s Size, layout *TileLayout) int {
 	if layout.Direction == Vertical {
 		availableHeight -= layout.TotalFixedHeight
 	}
-	h := int(float64(availableHeight) * s.Weight)
+	h := availableHeight
+	if layout.Direction == Vertical {
+		h = int(float64(availableHeight) * s.Weight)
+	}
 	if s.MaxHeight > 0 && h > s.MaxHeight {
 		return s.MaxHeight
 	}

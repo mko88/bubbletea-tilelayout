@@ -26,7 +26,7 @@ func initialModelWithConstraints() tl.TileLayout {
 
 	sub2 := tl.NewTileLayout("Sub-2", tl.Vertical, tl.Size{Weight: 0.6})
 	box3 := tiles.NewViewportTile(tl.Size{Weight: 0.20, MinHeight: 6, MaxWidth: 90}, "Box3", true)
-	box4 := tiles.NewViewportTile(tl.Size{Weight: 0.30, MaxWidth: 50}, "Box4", true)
+	box4 := tiles.NewViewportTile(tl.Size{Weight: 0.30, MinWidth: 40, MaxWidth: 50}, "Box4", true)
 	sub2.Add(&box3)
 	sub2.Add(&box4)
 
