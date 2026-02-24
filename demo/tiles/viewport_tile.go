@@ -49,7 +49,7 @@ func (vt *ViewportTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if vt.BoxBorder {
 			borderDescription = "I have a box border."
 		}
-		sizeDescription := fmt.Sprintf("Currently my dimensions are: %s.", printSize(vt.Size))
+		sizeDescription := fmt.Sprintf("Currently my dimensions are: %s", printSize(vt.Size))
 		text := fmt.Sprintf("I am viewport tile %v. %v %v", vt.Name, borderDescription, sizeDescription)
 		text = lipgloss.NewStyle().Width(newWidth).Render(text)
 		vt.Content.SetContent(text)
@@ -75,29 +75,44 @@ func (vt *ViewportTile) View() string {
 }
 
 var (
-	zeroStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("240")) // Dim gray
-	positiveStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("82"))  // Bright green
+	gray  = lipgloss.NewStyle().Foreground(lipgloss.Color("240")) // Dim gray
+	green = lipgloss.NewStyle().Foreground(lipgloss.Color("82"))  // Bright green
+	red   = lipgloss.NewStyle().Foreground(lipgloss.Color("88"))  // Bright green
 )
 
-func styleInt(value int) string {
-	if value > 0 {
-		return positiveStyle.Render(fmt.Sprintf("%d", value))
-	}
-	return zeroStyle.Render(fmt.Sprintf("%d", value))
+func grayInt(value int) string {
+	return gray.Render(fmt.Sprintf("%d", value))
+}
+
+func greenInt(value int) string {
+	return green.Render(fmt.Sprintf("%d", value))
+}
+
+func redInt(value int) string {
+	return red.Render(fmt.Sprintf("%d", value))
 }
 
 func styleFloat(value float64) string {
 	if value > 0 {
-		return positiveStyle.Render(fmt.Sprintf("%.2f", value))
+		return green.Render(fmt.Sprintf("%.2f", value))
 	}
-	return zeroStyle.Render(fmt.Sprintf("%.2f", value))
+	return gray.Render(fmt.Sprintf("%.2f", value))
 }
 
 func printSize(s tl.Size) string {
+	return fmt.Sprintf("\nreal  [w:%s,h:%s,W:%s]\nmin   [w:%s,h:%s]\nmax   [w:%s,h:%s]\nfixed [w:%s,h:%s]",
+		style(s.Width, s.MinWidth, s.MaxWidth, s.FixedWidth), style(s.Height, s.MinHeight, s.MaxHeight, s.FixedHeight), styleFloat(s.Weight),
+		style(s.MinWidth, s.Width, 0, 0), style(s.MinHeight, s.Height, 0, 0),
+		style(s.MaxWidth, s.Width, 0, 0), style(s.MaxHeight, s.Height, 0, 0),
+		style(s.FixedWidth, s.Width, 0, 0), style(s.FixedHeight, s.Height, 0, 0))
+}
 
-	return fmt.Sprintf("actual[w:%s,h:%s,W:%s] min[w:%s,h:%s] max[w:%s,h:%s] fixed[w:%s,h:%s]",
-		styleInt(s.Width), styleInt(s.Height), styleFloat(s.Weight),
-		styleInt(s.MinWidth), styleInt(s.MinHeight),
-		styleInt(s.MaxWidth), styleInt(s.MaxHeight),
-		styleInt(s.FixedWidth), styleInt(s.FixedHeight))
+func style(target, constraint1, constraint2, constraint3 int) string {
+	switch target {
+	case 0:
+		return grayInt(target)
+	case constraint1, constraint2, constraint3:
+		return redInt(target)
+	}
+	return greenInt(target)
 }
