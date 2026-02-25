@@ -32,7 +32,7 @@ func (vt *ViewportTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		vt.BaseViewportTile.Update(msg)
 		parent := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("62")).Render(vt.Parent.GetName())
 		text := fmt.Sprintf("Parent: %v\n%v", parent, printSize(vt.Size))
-		text = lipgloss.NewStyle().Width(vt.BaseTile.Size.Width).Render(text)
+		text = lipgloss.NewStyle().Width(vt.BaseViewportTile.Content.Width).Render(text)
 		vt.Content.SetContent(text)
 	}
 	var cmd tea.Cmd

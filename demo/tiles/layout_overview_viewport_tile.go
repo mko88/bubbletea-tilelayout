@@ -28,10 +28,15 @@ func (lot *LayoutOverviewTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.Name == lot.Name {
 			lot.BaseViewportTile.Update(msg)
 			var sb strings.Builder
-			fmt.Fprintf(&sb, "---Layout tree---\n")
+			fmt.Fprintf(&sb, "---Tree---\n")
 			printLayoutTree(&sb, *lot.Layout, "")
-			fmt.Fprintf(&sb, "\n---Layout sizes---\n")
+
+			fmt.Fprintf(&sb, "\n---Sizes---\n")
 			printLayoutSizes(&sb, *lot.Layout)
+
+			fmt.Fprintf(&sb, "\n---Tile---\n")
+			parent := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("62")).Render(lot.Parent.GetName())
+			fmt.Fprintf(&sb, "Parent: %v\n%v", parent, printSize(lot.Size))
 			lot.Content.SetContent(sb.String())
 			return lot, nil
 		}

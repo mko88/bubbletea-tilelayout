@@ -15,8 +15,9 @@ func NewDemoModel() DemoModel {
 	min := initialModelMinimal()
 	weights := initialModelWeightsOnly()
 	constraints := initialModelWithConstraints()
+	many := initialModelManyLayouts()
 	return DemoModel{
-		layouts:  []tl.TileLayout{min, weights, constraints},
+		layouts:  []tl.TileLayout{min, weights, constraints, many},
 		selected: 0,
 	}
 }

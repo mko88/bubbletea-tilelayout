@@ -10,14 +10,14 @@ import (
 	tl "github.com/mko88/bubbletea-tilelayout"
 )
 
-type CustomTile struct {
+type TextTile struct {
 	*tl.BaseTile
 	Data    map[string]tl.Metrics
 	Content string
 }
 
-func NewCustomTile(size tl.Size, name string, content string) CustomTile {
-	return CustomTile{
+func NewTextTile(size tl.Size, name string, content string) TextTile {
+	return TextTile{
 		BaseTile: &tl.BaseTile{
 			Name: name,
 			Size: size,
@@ -26,9 +26,9 @@ func NewCustomTile(size tl.Size, name string, content string) CustomTile {
 	}
 }
 
-func (ct *CustomTile) Init() tea.Cmd { return nil }
+func (ct *TextTile) Init() tea.Cmd { return nil }
 
-func (ct *CustomTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (ct *TextTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tl.LayoutUpdatedMsg:
 		ct.Data[msg.Name] = msg.Metrics
@@ -52,6 +52,6 @@ func (ct *CustomTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return ct, nil
 }
 
-func (ct *CustomTile) View() string {
+func (ct *TextTile) View() string {
 	return lipgloss.NewStyle().Width(ct.Size.Width).MaxHeight(ct.Size.Height).Render(ct.Content)
 }
