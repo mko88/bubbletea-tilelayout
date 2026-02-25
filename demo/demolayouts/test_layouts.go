@@ -72,41 +72,49 @@ func initialModelWeightsOnly() tl.TileLayout {
 }
 
 func initialModelManyLayouts() tl.TileLayout {
+	// create a root
 	root := tl.NewRoot(tl.Vertical)
+
+	// content layout to take all available space
 	content := tl.NewTileLayout("Content", tl.Horizontal, tl.Size{Weight: 1.0})
 
+	// status layout on bottom with fixed height 1.
+	status := tiles.NewTextTile(tl.Size{FixedHeight: 1}, "Status", "")
+
+	// left, middle and right sub layouts taking 1/3 of the width
+	// (because will be added to the content Horizontal)
 	left := tl.NewTileLayout("Left", tl.Vertical, tl.Size{Weight: .33})
-	leftTop := tl.NewTileLayout("LeftTop", tl.Horizontal, tl.Size{Weight: .33})
-	leftBottom := tl.NewTileLayout("LeftBottom", tl.Horizontal, tl.Size{Weight: .33})
-
 	middle := tl.NewTileLayout("Middle", tl.Vertical, tl.Size{Weight: .33})
-
 	right := tl.NewTileLayout("Right", tl.Horizontal, tl.Size{Weight: .33})
 
+	// sub layouts for the left area, taking half the height (left is Vertical)
+	leftTop := tl.NewTileLayout("LeftTop", tl.Horizontal, tl.Size{Weight: .5})
+	leftBottom := tl.NewTileLayout("LeftBottom", tl.Horizontal, tl.Size{Weight: .5})
+
+	// tiles for left top
 	ltb1 := tiles.NewLayoutOverviewTile(tl.Size{Weight: 0.6}, "lt-b1", true, &root)
 	ltb2 := tiles.NewViewportTile(tl.Size{Weight: 0.4}, "lt-b2", true)
 
+	// tiles for left bottom
 	lbb1 := tiles.NewViewportTile(tl.Size{Weight: 0.3}, "lb-b1", true)
 	lbb2 := tiles.NewViewportTile(tl.Size{Weight: 0.7}, "lb-b2", true)
 
+	// tiles for middle
 	mb1 := tiles.NewViewportTile(tl.Size{Weight: 0.33}, "m-b1", true)
 	mb2 := tiles.NewViewportTile(tl.Size{Weight: 0.33}, "m-b2", true)
 	mb3 := tiles.NewViewportTile(tl.Size{Weight: 0.33}, "m-b3", true)
 
+	// tiles for right
 	rb1 := tiles.NewViewportTile(tl.Size{Weight: 0.25}, "r-b1", true)
 	rb2 := tiles.NewViewportTile(tl.Size{Weight: 0.25}, "r-b2", true)
 	rb3 := tiles.NewViewportTile(tl.Size{Weight: 0.25}, "r-b3", true)
 	rb4 := tiles.NewViewportTile(tl.Size{Weight: 0.25}, "r-b4", true)
 
-	status := tiles.NewTextTile(tl.Size{FixedHeight: 1}, "Status", "I am the status tile. I have a fixed height of 1 and take up 100% space.")
-
+	// add the tiles to their layouts
 	leftTop.Add(&ltb1)
 	leftTop.Add(&ltb2)
 	leftBottom.Add(&lbb1)
 	leftBottom.Add(&lbb2)
-
-	left.Add(&leftTop)
-	left.Add(&leftBottom)
 
 	middle.Add(&mb1)
 	middle.Add(&mb2)
@@ -116,6 +124,10 @@ func initialModelManyLayouts() tl.TileLayout {
 	right.Add(&rb2)
 	right.Add(&rb3)
 	right.Add(&rb4)
+
+	// add the sub-layouts to their layouts
+	left.Add(&leftTop)
+	left.Add(&leftBottom)
 
 	content.Add(&left)
 	content.Add(&middle)
