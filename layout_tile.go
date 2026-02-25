@@ -9,6 +9,7 @@ type Tile interface {
 	SetSize(size Size)
 	GetParent() Tile
 	SetParent(tile Tile)
+	IsLayout() bool
 }
 
 type BaseTile struct {
@@ -36,3 +37,4 @@ func (bt BaseTile) GetSize() Size          { return bt.Size }
 func (bt *BaseTile) SetSize(size Size)     { bt.Size = size }
 func (bt BaseTile) GetParent() Tile        { return bt.Parent }
 func (bt *BaseTile) SetParent(parent Tile) { bt.Parent = parent }
+func (vt BaseTile) IsLayout() bool         { return false }

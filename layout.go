@@ -110,6 +110,8 @@ func (tl *TileLayout) handleWindowSizeMsg(msg tea.WindowSizeMsg) {
 	tl.Metrics.RenderTime = elapsed
 }
 
+func (tl TileLayout) IsLayout() bool { return true }
+
 func (tl TileLayout) Init() tea.Cmd { return nil }
 
 // Handle update messages from BubbleTea.
@@ -140,9 +142,11 @@ func (tl TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case TileUpdatedMsg:
 		for i, tile := range tl.Tiles {
-			updated, cmd := tile.Update(msg)
-			tl.Tiles[i] = updated.(Tile)
-			cmds = append(cmds, cmd)
+			if tile.IsLayout() || tile.GetName() == msg.Name {
+				updated, cmd := tile.Update(msg)
+				tl.Tiles[i] = updated.(Tile)
+				cmds = append(cmds, cmd)
+			}
 		}
 	default:
 		for i, tile := range tl.Tiles {

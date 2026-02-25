@@ -15,31 +15,31 @@ func initialModelMinimal() tl.TileLayout {
 }
 
 func initialModelWithConstraints() tl.TileLayout {
+	// create the root layout
 	root := tl.NewRoot(tl.Vertical)
-	sub1 := tl.NewTileLayout("Sub-1", tl.Horizontal, tl.Size{Weight: 1.0})
+	border := true
+	// create the tiles and sub-layouts
+	contentArea := tl.NewTileLayout("ContentArea", tl.Horizontal, tl.Size{Weight: 1.0})
 	status := tiles.NewCustomTile(tl.Size{FixedHeight: 1}, "Status", "I am the status tile. I have a fixed height of 1 and take up 100% space.")
+	overview := tiles.NewLayoutOverviewTile(tl.Size{Weight: 0.3}, "Layout overview", border, &root)
+	rightArea := tl.NewTileLayout("RightArea", tl.Vertical, tl.Size{Weight: 0.6})
+	box3 := tiles.NewViewportTile(tl.Size{Weight: 0.20, MinHeight: 6, MaxWidth: 90}, "Box3", border)
+	box4 := tiles.NewViewportTile(tl.Size{Weight: 0.30, MinWidth: 40, MaxWidth: 50}, "Box4", border)
+	rightAreaSub := tl.NewTileLayout("RightAreaSubLayout", tl.Horizontal, tl.Size{Weight: 0.5})
+	box5 := tiles.NewViewportTile(tl.Size{Weight: 0.40, MaxHeight: 8}, "Box5", border)
+	box6 := tiles.NewViewportTile(tl.Size{Weight: 0.60, MaxWidth: 40, MaxHeight: 14}, "Box6", border)
 
-	box1 := tiles.NewViewportTile(tl.Size{Weight: 0.20, FixedWidth: 50, FixedHeight: 15}, "Box1", true)
-	box2 := tiles.NewViewportTile(tl.Size{Weight: 0.40, MaxWidth: 50}, "Box2", true)
-	sub1.Add(&box1)
-	sub1.Add(&box2)
-
-	sub2 := tl.NewTileLayout("Sub-2", tl.Vertical, tl.Size{Weight: 0.6})
-	box3 := tiles.NewViewportTile(tl.Size{Weight: 0.20, MinHeight: 6, MaxWidth: 90}, "Box3", true)
-	box4 := tiles.NewViewportTile(tl.Size{Weight: 0.30, MinWidth: 40, MaxWidth: 50}, "Box4", true)
-	sub2.Add(&box3)
-	sub2.Add(&box4)
-
-	subsub1 := tl.NewTileLayout("Sub-2-Sub-1", tl.Horizontal, tl.Size{Weight: 0.5})
-	box5 := tiles.NewViewportTile(tl.Size{Weight: 0.40, MaxHeight: 8}, "Box5", true)
-	box6 := tiles.NewViewportTile(tl.Size{Weight: 0.60, MaxWidth: 40, MaxHeight: 14}, "Box6", true)
-	subsub1.Add(&box5)
-	subsub1.Add(&box6)
-	sub2.Add(&subsub1)
-	sub1.Add(&sub2)
-
-	root.Add(&sub1)
+	// add the tiles and sub-layouts to the layouts
+	root.Add(&contentArea)
 	root.Add(&status)
+	contentArea.Add(&overview)
+	contentArea.Add(&rightArea)
+	rightArea.Add(&box3)
+	rightArea.Add(&box4)
+	rightArea.Add(&rightAreaSub)
+	rightAreaSub.Add(&box5)
+	rightAreaSub.Add(&box6)
+
 	return root
 }
 
