@@ -9,6 +9,7 @@ type Tile interface {
 	SetSize(size Size)
 	GetParent() Tile
 	SetParent(tile Tile)
+	HasFocus() bool
 	IsLayout() bool
 }
 
@@ -16,6 +17,7 @@ type BaseTile struct {
 	Name   string
 	Size   Size
 	Parent Tile
+	Focus  bool
 }
 
 type TileUpdatedMsg struct {
@@ -37,4 +39,5 @@ func (bt BaseTile) GetSize() Size          { return bt.Size }
 func (bt *BaseTile) SetSize(size Size)     { bt.Size = size }
 func (bt BaseTile) GetParent() Tile        { return bt.Parent }
 func (bt *BaseTile) SetParent(parent Tile) { bt.Parent = parent }
-func (vt BaseTile) IsLayout() bool         { return false }
+func (bt BaseTile) IsLayout() bool         { return false }
+func (bt BaseTile) HasFocus() bool         { return bt.Focus }

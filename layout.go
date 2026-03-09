@@ -44,6 +44,13 @@ func (tl *TileLayout) layoutUpdated() tea.Cmd {
 // The layout direction
 type Direction int
 
+func (d Direction) Name() string {
+	if d == 0 {
+		return "Horizontal"
+	}
+	return "Vertical"
+}
+
 const (
 	Horizontal Direction = iota
 	Vertical

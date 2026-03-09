@@ -6,21 +6,21 @@ import (
 )
 
 type InteractiveModel struct {
-	layouts   []tl.TileLayout
-	selected  int
-	statusBar tl.Tile
+	contentLayout tl.TileLayout
+	selected      int
+	statusBar     tl.Tile
 }
 
 func NewInteractiveModel() InteractiveModel {
 	m := interactiveModel()
 	return InteractiveModel{
-		layouts:  []tl.TileLayout{m},
-		selected: 0,
+		contentLayout: m,
+		selected:      0,
 	}
 }
 
 func (d InteractiveModel) Init() tea.Cmd {
-	return d.layouts[d.selected].Init()
+	return d.contentLayout.Init()
 }
 
 func (d InteractiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -35,22 +35,16 @@ func (d InteractiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	}
-	updated, cmd := d.layouts[d.selected].Update(msg)
-	d.layouts[d.selected] = updated.(tl.TileLayout)
+	updated, cmd := d.contentLayout.Update(msg)
+	d.contentLayout = updated.(tl.TileLayout)
 	cmds = append(cmds, cmd)
 	return d, tea.Batch(cmds...)
 }
 
 func (d InteractiveModel) updateSelection() (tea.Model, tea.Cmd) {
-
-	if d.selected+1 < len(d.layouts) {
-		d.selected += 1
-	} else {
-		d.selected = 0
-	}
 	return d, tea.WindowSize()
 }
 
 func (d InteractiveModel) View() string {
-	return d.layouts[d.selected].View()
+	return d.contentLayout.View()
 }

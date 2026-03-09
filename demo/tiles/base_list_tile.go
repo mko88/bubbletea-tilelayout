@@ -15,6 +15,10 @@ type BaseListTile struct {
 func NewBaseListTile(items []list.Item, delegate list.ItemDelegate, size tl.Size, name string, boxBorder bool) BaseListTile {
 	l := list.New(items, delegate, 10, 10)
 	l.SetShowHelp(false)
+	l.SetShowFilter(false)
+	l.SetShowTitle(false)
+	l.SetShowStatusBar(false)
+	l.SetShowPagination(false)
 	return BaseListTile{
 		BaseTile: &tl.BaseTile{
 			Name: name,
@@ -25,33 +29,35 @@ func NewBaseListTile(items []list.Item, delegate list.ItemDelegate, size tl.Size
 	}
 }
 
-func (lt *BaseListTile) Init() tea.Cmd { return nil }
+func (blt *BaseListTile) Init() tea.Cmd { return nil }
 
-func (lt *BaseListTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (blt *BaseListTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tl.TileUpdatedMsg:
-		if lt.GetName() != msg.Name {
+		if blt.GetName() != msg.Name {
 			// only react to parent updates
-			return lt, nil
+			return blt, nil
 		}
-		newWidth := lt.Size.Width
-		newHeight := lt.Size.Height
-		if lt.BoxBorder {
+		newWidth := blt.Size.Width
+		newHeight := blt.Size.Height
+		if blt.BoxBorder {
 			newWidth -= BOX_PAD
 			newHeight -= BOX_PAD
 		}
-		lt.Content.SetWidth(newWidth)
-		lt.Content.SetHeight(newHeight)
-		return lt, nil
+		blt.Content.SetWidth(newWidth)
+		blt.Content.SetHeight(newHeight)
+		return blt, nil
+	case tea.MouseMsg:
+		return blt, nil
 	}
 	var cmd tea.Cmd
-	lt.Content, cmd = lt.Content.Update(msg)
-	return lt, cmd
+	blt.Content, cmd = blt.Content.Update(msg)
+	return blt, cmd
 }
 
-func (lt *BaseListTile) View() string {
-	if lt.BoxBorder {
-		return RenderBox(lt.Name, lt.Content.View(), lt.Size)
+func (blt *BaseListTile) View() string {
+	if blt.BoxBorder {
+		return RenderBox(blt.Name, blt.Content.View(), blt.Size)
 	}
-	return lt.Content.View()
+	return blt.Content.View()
 }

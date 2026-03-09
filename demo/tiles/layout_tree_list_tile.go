@@ -13,17 +13,17 @@ import (
 
 type LayoutTreeListTile struct {
 	BaseListTile
-	Layout tl.TileLayout
+	Layout *tl.TileLayout
 }
 
-func NewLayoutTreeListTile(layout tl.TileLayout, size tl.Size) LayoutTreeListTile {
+func NewLayoutTreeListTile(layout *tl.TileLayout, size tl.Size) LayoutTreeListTile {
 	rootModel := RowModel{
 		Tile:   layout,
 		Indent: 0,
 	}
 	models := make([]RowModel, 0)
 	models = append(models, rootModel)
-	layoutToTreeModel(layout, &models, 2)
+	layoutToTreeModel(layout, &models, 1)
 	items := make([]list.Item, len(models))
 	for i, m := range models {
 		items[i] = m
@@ -37,7 +37,30 @@ func NewLayoutTreeListTile(layout tl.TileLayout, size tl.Size) LayoutTreeListTil
 	}
 }
 
-func layoutToTreeModel(layout tl.TileLayout, models *[]RowModel, indent int) {
+func (ltlt *LayoutTreeListTile) Init() tea.Cmd { return ltlt.BaseListTile.Init() }
+func (ltlt *LayoutTreeListTile) View() string  { return ltlt.BaseListTile.View() }
+func (ltlt *LayoutTreeListTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	ltlt.UpdateLayout()
+	_, cmd := ltlt.BaseListTile.Update(msg)
+	return ltlt, cmd
+}
+
+func (ltlt *LayoutTreeListTile) UpdateLayout() {
+	rootModel := RowModel{
+		Tile:   ltlt.Layout,
+		Indent: 0,
+	}
+	models := make([]RowModel, 0)
+	models = append(models, rootModel)
+	layoutToTreeModel(ltlt.Layout, &models, 1)
+	items := make([]list.Item, len(models))
+	for i, m := range models {
+		items[i] = m
+	}
+	ltlt.BaseListTile.Content.SetItems(items)
+}
+
+func layoutToTreeModel(layout *tl.TileLayout, models *[]RowModel, indent int) {
 	for _, tile := range layout.Tiles {
 		rm := RowModel{
 			Tile:   tile,
@@ -45,8 +68,8 @@ func layoutToTreeModel(layout tl.TileLayout, models *[]RowModel, indent int) {
 		}
 		*models = append(*models, rm)
 		if tile.IsLayout() {
-			sub := tile.(*tl.TileLayout)
-			layoutToTreeModel(*sub, models, indent+2)
+			sub := tile.(tl.TileLayout)
+			layoutToTreeModel(&sub, models, indent+2)
 		}
 
 	}

@@ -7,8 +7,9 @@ import (
 
 func interactiveModel() tl.TileLayout {
 	root := tl.NewRoot(tl.Horizontal)
-	targetLayout := initialModelWithConstraints()
-	layoutList := tiles.NewLayoutTreeListTile(targetLayout, tl.Size{Weight: 1, MaxWidth: 30})
+	// targetLayout := initialModelWithConstraints()
+	targetLayout := tl.NewTileLayout("Content", tl.Horizontal, tl.Size{Weight: 1.0})
+	layoutList := tiles.NewLayoutTreeListTile(&targetLayout, tl.Size{Weight: 1.0, MaxWidth: 30})
 	root.Add(&layoutList)
 	root.Add(&targetLayout)
 	return root
