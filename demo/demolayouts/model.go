@@ -6,18 +6,18 @@ import (
 )
 
 type DemoModel struct {
-	layouts   []tl.TileLayout
-	selected  int
-	statusBar tl.Tile
+	layouts  []*tl.TileLayout
+	selected int
 }
 
 func NewDemoModel() DemoModel {
-	min := initialModelMinimal()
-	weights := initialModelWeightsOnly()
-	constraints := initialModelWithConstraints()
-	many := initialModelManyLayouts()
 	return DemoModel{
-		layouts:  []tl.TileLayout{min, weights, constraints, many},
+		layouts: []*tl.TileLayout{
+			initialModelMinimal(),
+			initialModelWeightsOnly(),
+			initialModelWithConstraints(),
+			initialModelManyLayouts(),
+		},
 		selected: 0,
 	}
 }
@@ -49,7 +49,7 @@ func (d DemoModel) updateSelection() (tea.Model, tea.Cmd) {
 	} else {
 		d.selected = 0
 	}
-	return d, tea.WindowSize()
+	return d, tea.Batch(d.layouts[d.selected].Init(), tea.WindowSize())
 }
 
 func (d DemoModel) View() string {

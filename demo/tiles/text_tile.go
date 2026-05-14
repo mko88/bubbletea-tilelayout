@@ -16,8 +16,8 @@ type TextTile struct {
 	Content string
 }
 
-func NewTextTile(size tl.Size, name string, content string) TextTile {
-	return TextTile{
+func NewTextTile(size tl.Size, name string, content string) *TextTile {
+	return &TextTile{
 		BaseTile: &tl.BaseTile{
 			Name: name,
 			Size: size,
@@ -45,7 +45,7 @@ func (ct *TextTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		ct.Content = sb.String()
 	case tl.TileUpdatedMsg:
 		if ct.GetName() == msg.Name {
-			//
+			ct.Size = msg.Size
 		}
 	}
 

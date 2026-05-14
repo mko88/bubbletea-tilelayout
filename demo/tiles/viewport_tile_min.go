@@ -9,10 +9,9 @@ type ViewportTileMinimal struct {
 	*BaseViewportTile
 }
 
-func NewViewportTileMinimal(size tl.Size, name string, boxBorder bool) ViewportTileMinimal {
-	base := NewBaseViewportTile(size, name, boxBorder)
-	return ViewportTileMinimal{
-		BaseViewportTile: &base,
+func NewViewportTileMinimal(size tl.Size, name string, boxBorder bool) *ViewportTileMinimal {
+	return &ViewportTileMinimal{
+		BaseViewportTile: NewBaseViewportTile(size, name, boxBorder),
 	}
 }
 

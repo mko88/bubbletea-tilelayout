@@ -10,14 +10,13 @@ import (
 )
 
 type LayoutOverviewTile struct {
-	BaseViewportTile
+	*BaseViewportTile
 	Layout *tl.TileLayout
 }
 
-func NewLayoutOverviewTile(size tl.Size, name string, boxBorder bool, layout *tl.TileLayout) LayoutOverviewTile {
-	base := NewBaseViewportTile(size, name, boxBorder)
-	return LayoutOverviewTile{
-		BaseViewportTile: base,
+func NewLayoutOverviewTile(size tl.Size, name string, boxBorder bool, layout *tl.TileLayout) *LayoutOverviewTile {
+	return &LayoutOverviewTile{
+		BaseViewportTile: NewBaseViewportTile(size, name, boxBorder),
 		Layout:           layout,
 	}
 }
@@ -29,10 +28,10 @@ func (lot *LayoutOverviewTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			lot.BaseViewportTile.Update(msg)
 			var sb strings.Builder
 			fmt.Fprintf(&sb, "---Tree---\n")
-			printLayoutTree(&sb, *lot.Layout, "")
+			printLayoutTree(&sb, lot.Layout, "")
 
 			fmt.Fprintf(&sb, "\n---Sizes---\n")
-			printLayoutSizes(&sb, *lot.Layout)
+			printLayoutSizes(&sb, lot.Layout)
 
 			fmt.Fprintf(&sb, "\n---Tile---\n")
 			parent := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("62")).Render(lot.Parent.GetName())
@@ -48,10 +47,10 @@ func (lot *LayoutOverviewTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return lot, tea.Batch(cmds...)
 }
 
-func printLayoutSizes(sb *strings.Builder, l tl.TileLayout) {
+func printLayoutSizes(sb *strings.Builder, l *tl.TileLayout) {
 	for _, tile := range l.Tiles {
-		if tl, ok := tile.(tl.TileLayout); ok {
-			printLayoutSizes(sb, tl)
+		if child, ok := tile.(*tl.TileLayout); ok {
+			printLayoutSizes(sb, child)
 		}
 	}
 	name := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("62")).Render(l.Name)
@@ -63,10 +62,9 @@ func printLayoutSizes(sb *strings.Builder, l tl.TileLayout) {
 		direction = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render("Vertical")
 	}
 	fmt.Fprintf(sb, "%v(%v)\n%v\n", name, direction, printSize(l.Size))
-
 }
 
-func printLayoutTree(sb *strings.Builder, l tl.TileLayout, prefix string) {
+func printLayoutTree(sb *strings.Builder, l *tl.TileLayout, prefix string) {
 	name := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("62")).Render(l.Name)
 	direction := ""
 	switch l.Direction {
@@ -77,8 +75,8 @@ func printLayoutTree(sb *strings.Builder, l tl.TileLayout, prefix string) {
 	}
 	fmt.Fprintf(sb, "%s%v(%v)\n", prefix, name, direction)
 	for _, tile := range l.Tiles {
-		if tl, ok := tile.(tl.TileLayout); ok {
-			printLayoutTree(sb, tl, prefix+"  ")
+		if child, ok := tile.(*tl.TileLayout); ok {
+			printLayoutTree(sb, child, prefix+"  ")
 		} else {
 			fmt.Fprintf(sb, "%s%v\n", prefix+"  ", tile.GetName())
 		}

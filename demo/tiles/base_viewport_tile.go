@@ -58,9 +58,9 @@ type BaseViewportTile struct {
 	BoxBorder bool
 }
 
-func NewBaseViewportTile(size tl.Size, name string, boxBorder bool) BaseViewportTile {
+func NewBaseViewportTile(size tl.Size, name string, boxBorder bool) *BaseViewportTile {
 	vp := viewport.New(10, 10)
-	return BaseViewportTile{
+	return &BaseViewportTile{
 		BaseTile: &tl.BaseTile{
 			Name: name,
 			Size: size,
@@ -76,7 +76,6 @@ func (vt *BaseViewportTile) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tl.TileUpdatedMsg:
 		if vt.GetName() != msg.Name {
-			// only react to parent updates
 			return vt, nil
 		}
 		newWidth := vt.Size.Width

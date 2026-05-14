@@ -63,8 +63,8 @@ type TileLayout struct {
 	Metrics          Metrics
 }
 
-func NewRoot(direction Direction) TileLayout {
-	return TileLayout{
+func NewRoot(direction Direction) *TileLayout {
+	return &TileLayout{
 		BaseTile: &BaseTile{
 			Name: "Root",
 		},
@@ -72,8 +72,8 @@ func NewRoot(direction Direction) TileLayout {
 	}
 }
 
-func NewTileLayout(name string, direction Direction, size Size) TileLayout {
-	return TileLayout{
+func NewTileLayout(name string, direction Direction, size Size) *TileLayout {
+	return &TileLayout{
 		BaseTile: &BaseTile{
 			Name: name,
 			Size: size,
@@ -88,6 +88,35 @@ func (tl *TileLayout) Add(tile Tile) {
 	tl.TotalFixedWidth += tile.GetSize().FixedWidth
 	tl.TotalFixedHeight += tile.GetSize().FixedHeight
 	tl.Tiles = append(tl.Tiles, tile)
+}
+
+// Replace a tile by name with another tile. Returns true if found and replaced.
+func (tl *TileLayout) Replace(name string, newTile Tile) bool {
+	for i, tile := range tl.Tiles {
+		if tile.GetName() == name {
+			tl.TotalFixedWidth -= tile.GetSize().FixedWidth
+			tl.TotalFixedHeight -= tile.GetSize().FixedHeight
+			tl.TotalFixedWidth += newTile.GetSize().FixedWidth
+			tl.TotalFixedHeight += newTile.GetSize().FixedHeight
+			newTile.SetParent(tl)
+			tl.Tiles[i] = newTile
+			return true
+		}
+	}
+	return false
+}
+
+// Remove a tile by name. Returns true if found and removed.
+func (tl *TileLayout) Remove(name string) bool {
+	for i, tile := range tl.Tiles {
+		if tile.GetName() == name {
+			tl.TotalFixedWidth -= tile.GetSize().FixedWidth
+			tl.TotalFixedHeight -= tile.GetSize().FixedHeight
+			tl.Tiles = append(tl.Tiles[:i], tl.Tiles[i+1:]...)
+			return true
+		}
+	}
+	return false
 }
 
 // If the layout have no parent, it's considered root.
@@ -110,14 +139,93 @@ func (tl *TileLayout) handleWindowSizeMsg(msg tea.WindowSizeMsg) {
 	tl.Metrics.RenderTime = elapsed
 }
 
-func (tl TileLayout) IsLayout() bool { return true }
+func (tl *TileLayout) IsLayout() bool { return true }
 
-func (tl TileLayout) Init() tea.Cmd { return nil }
+// Init forwards to all child tiles so they can start their own commands.
+func (tl *TileLayout) Init() tea.Cmd {
+	var cmds []tea.Cmd
+	for _, tile := range tl.Tiles {
+		cmds = append(cmds, tile.Init())
+	}
+	return tea.Batch(cmds...)
+}
+
+// collectLeaves returns all non-layout leaf tiles in tree order.
+func (tl *TileLayout) collectLeaves() []Tile {
+	var leaves []Tile
+	for _, tile := range tl.Tiles {
+		if child, ok := tile.(*TileLayout); ok {
+			leaves = append(leaves, child.collectLeaves()...)
+		} else {
+			leaves = append(leaves, tile)
+		}
+	}
+	return leaves
+}
+
+// FocusFirst focuses the first leaf tile in the layout tree.
+func (tl *TileLayout) FocusFirst() {
+	leaves := tl.collectLeaves()
+	for i, leaf := range leaves {
+		leaf.SetFocused(i == 0)
+	}
+}
+
+// FocusNext moves focus to the next leaf tile, wrapping around to the first.
+// If nothing is focused, the first tile is focused.
+func (tl *TileLayout) FocusNext() {
+	leaves := tl.collectLeaves()
+	if len(leaves) == 0 {
+		return
+	}
+	focusedIdx := -1
+	for i, leaf := range leaves {
+		if leaf.IsFocused() {
+			focusedIdx = i
+			break
+		}
+	}
+	next := (focusedIdx + 1) % len(leaves)
+	for i, leaf := range leaves {
+		leaf.SetFocused(i == next)
+	}
+}
+
+// FocusPrev moves focus to the previous leaf tile, wrapping around to the last.
+// If nothing is focused, the last tile is focused.
+func (tl *TileLayout) FocusPrev() {
+	leaves := tl.collectLeaves()
+	if len(leaves) == 0 {
+		return
+	}
+	// sentinel len(leaves) means "nothing focused" → prev wraps to last
+	focusedIdx := len(leaves)
+	for i, leaf := range leaves {
+		if leaf.IsFocused() {
+			focusedIdx = i
+			break
+		}
+	}
+	prev := (focusedIdx - 1 + len(leaves)) % len(leaves)
+	for i, leaf := range leaves {
+		leaf.SetFocused(i == prev)
+	}
+}
+
+// FocusedTile returns the currently focused leaf tile, or nil if none is focused.
+func (tl *TileLayout) FocusedTile() Tile {
+	for _, leaf := range tl.collectLeaves() {
+		if leaf.IsFocused() {
+			return leaf
+		}
+	}
+	return nil
+}
 
 // Handle update messages from BubbleTea.
 // On WidnowSizeMsg, the layout is "layouted" and LayoutUpdatedMsg is additionally returned.
 // The message is forwarded to each tile.
-func (tl TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (tl *TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
@@ -159,7 +267,7 @@ func (tl TileLayout) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // Render all tiles, joining them together.
-func (tl TileLayout) View() string {
+func (tl *TileLayout) View() string {
 	if len(tl.Tiles) == 0 {
 		return ""
 	}
@@ -312,6 +420,30 @@ func (tl *TileLayout) distributeLeftover(totalWidth, totalHeight int) (int, int,
 	return totalWidth, totalHeight, somethingResized
 }
 
+// sumWeights returns the total weight of all non-fixed tiles along the layout's
+// primary axis. Used to normalize proportional sizing so any set of weights
+// produces correct proportions (e.g. 1/1/1 is treated the same as 0.33/0.33/0.33).
+func sumWeights(layout *TileLayout) float64 {
+	total := 0.0
+	for _, tile := range layout.Tiles {
+		s := tile.GetSize()
+		switch layout.Direction {
+		case Horizontal:
+			if s.FixedWidth == 0 {
+				total += s.Weight
+			}
+		case Vertical:
+			if s.FixedHeight == 0 {
+				total += s.Weight
+			}
+		}
+	}
+	if total == 0 {
+		return 1.0
+	}
+	return total
+}
+
 // Decide the width of a tile in available space:
 // 1. If fixed is defined, the minimum between the fixed and available is returned.
 // 2. Total fixed width is subtracted from the available width.
@@ -332,7 +464,7 @@ func decideWidth(s Size, layout *TileLayout) int {
 	}
 	w := availableWidth
 	if layout.Direction == Horizontal {
-		w = int(float64(availableWidth) * s.Weight)
+		w = int(float64(availableWidth) * s.Weight / sumWeights(layout))
 	}
 	if s.MaxWidth > 0 && w > s.MaxWidth {
 		return s.MaxWidth
@@ -373,7 +505,7 @@ func decideHeight(s Size, layout *TileLayout) int {
 	}
 	h := availableHeight
 	if layout.Direction == Vertical {
-		h = int(float64(availableHeight) * s.Weight)
+		h = int(float64(availableHeight) * s.Weight / sumWeights(layout))
 	}
 	if s.MaxHeight > 0 && h > s.MaxHeight {
 		return s.MaxHeight
